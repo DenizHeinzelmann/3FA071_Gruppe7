@@ -1,15 +1,18 @@
 package repository;
 
-import interfaces.IDatabaseConnection;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import interfaces.IDatabaseConnection;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class DatabaseConnection implements IDatabaseConnection {
     private Connection connection;
 
+    // Öffnet DB-Verbindung mit übergebenen Werten von .property file
     @Override
     public Connection openConnection(Properties properties) throws SQLException {
         String url = properties.getProperty(System.getProperty("user.name") + ".db.url");
@@ -20,7 +23,7 @@ public class DatabaseConnection implements IDatabaseConnection {
         System.out.println("Verbindung zur Datenbank erfolgreich!");
         return connection;
     }
-
+    //Created die Tables
     @Override
     public void createAllTables() throws SQLException {
         String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
@@ -67,6 +70,7 @@ public class DatabaseConnection implements IDatabaseConnection {
         }
     }
 
+    // Closed die Verbindung zur Datenbank
     @Override
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
@@ -83,6 +87,18 @@ public class DatabaseConnection implements IDatabaseConnection {
             stmt.setString(2, email);
             stmt.executeUpdate();
         }
+    }
+
+    public Customer readCustomerById(int id) throws SQLException {
+        String sql = "SELECT * FROM customers WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Customer(rs.getInt("id"), rs.getString("name"), rs.getString("email"));
+            }
+        }
+        return null; // return null if customer is not found
     }
 
     public void updateCustomer(int id, String name, String email) throws SQLException {
@@ -122,24 +138,6 @@ public class DatabaseConnection implements IDatabaseConnection {
         }
     }
 
-    // CRUD operations for Readings
-    public void createReading(int customerId, String readingType, double readingValue, Date readingDate, String unit) throws SQLException {
-        if (!customerExists(customerId)) {
-            // Handle customer creation or throw exception
-            throw new SQLException("Customer does not exist. Cannot create reading.");
-        }
-
-        String sql = "INSERT INTO readings (customer_id, reading_type, reading_value, reading_date, unit) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, customerId);
-            stmt.setString(2, readingType);
-            stmt.setDouble(3, readingValue);
-            stmt.setDate(4, new java.sql.Date(readingDate.getTime()));
-            stmt.setString(5, unit);
-            stmt.executeUpdate();
-        }
-    }
-
     public boolean customerExists(int customerId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM customers WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -152,3 +150,4 @@ public class DatabaseConnection implements IDatabaseConnection {
         return false;
     }
 }
+
