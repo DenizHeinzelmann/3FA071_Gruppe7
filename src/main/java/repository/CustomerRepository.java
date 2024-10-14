@@ -1,5 +1,6 @@
 package repository;
 
+import enums.Gender;
 import model.Customer;
 
 import java.sql.*;
@@ -20,7 +21,7 @@ public class CustomerRepository implements AutoCloseable{
             stmt.setString(1, customer.getFirstName());
             stmt.setString(2, customer.getLastName());
             stmt.setDate(3, Date.valueOf(customer.getBirthDate()));
-            stmt.setObject(4, customer.getGender());
+            stmt.setObject(4, customer.getGender().name());
             stmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -34,7 +35,7 @@ public class CustomerRepository implements AutoCloseable{
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Customer(rs.getString("firstname"), rs.getString("lastname"), rs.getDate("birthday").toLocalDate(), rs.getObject("gender"));
+                return new Customer(rs.getString("firstname"), rs.getString("lastname"), rs.getDate("birthdate").toLocalDate(), Gender.valueOf(rs.getString("gender")));
             }
 
         } catch (SQLException e) {
@@ -44,13 +45,13 @@ public class CustomerRepository implements AutoCloseable{
     }
 
     public void updateCustomer(int id, Customer customer) {
-        String sql = "UPDATE customers SET firstname=?, lastname=?, birthday=?, gender=? WHERE id=?";
+        String sql = "UPDATE customers SET firstname=?, lastname=?, birthdate=?, gender=? WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.setString(2, customer.getFirstName());
             stmt.setString(3, customer.getLastName());
             stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
-            stmt.setObject(5, customer.getGender());
+            stmt.setObject(5, customer.getGender().name());
             stmt.executeUpdate();
 
 

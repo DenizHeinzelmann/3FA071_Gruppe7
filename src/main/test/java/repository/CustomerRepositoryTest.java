@@ -19,7 +19,7 @@ class CustomerRepositoryTest {
     void setUp() throws SQLException {
         Properties properties = new Properties();
         properties.setProperty(System.getProperty("user.name") + ".db.url", "jdbc:mariadb://localhost:3306/hausfix_db");
-        properties.setProperty(System.getProperty("user.name") + ".db.user", "root");
+        properties.setProperty(System.getProperty("user.name") + ".db.user", "test");
         properties.setProperty(System.getProperty("user.name") + ".db.pw", "hausverwaltung");
         this.customerRepository = new CustomerRepository(properties);
     }
@@ -28,6 +28,7 @@ class CustomerRepositoryTest {
     @Test
     void createCustomer() {
         Customer customer = new Customer("Steve", "Müller", LocalDate.now(), Gender.M);
+        this.customerRepository.createCustomer(customer);
     }
 
     @Test
@@ -37,9 +38,12 @@ class CustomerRepositoryTest {
 
     @Test
     void updateCustomer() {
+        Customer customer = new Customer("Gary", "Müller", LocalDate.now(), Gender.W);
+        this.customerRepository.updateCustomer(1,customer);
     }
 
     @Test
     void deleteCustomer() {
+        this.customerRepository.deleteCustomer(1);
     }
 }

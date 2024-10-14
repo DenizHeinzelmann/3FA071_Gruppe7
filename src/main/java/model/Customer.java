@@ -11,7 +11,11 @@ public class Customer implements ICustomer {
     private LocalDate birthdate;
     private Gender gender;
 
-    public Customer(String firstname, String lastname, LocalDate birthday, Object gender) {
+    public Customer(String firstname, String lastname, LocalDate birthdate, Gender gender) {
+        this.lastname = lastname;
+        this.firstName = firstname;
+        this.birthdate = birthdate;
+        this.gender = gender;
     }
 
     @Override

@@ -22,6 +22,7 @@ public class DatabaseConnection implements IDatabaseConnection {
 
         connection = DriverManager.getConnection(url, user, password);
         System.out.println("Verbindung zur Datenbank erfolgreich!");
+        this.createAllTables();
         return connection;
     }
     //Created die Tables
@@ -32,7 +33,7 @@ public class DatabaseConnection implements IDatabaseConnection {
                 "firstname VARCHAR(255)," +
                 "lastname VARCHAR(255)," +
                 "birthdate DATE," +
-                "gender ENUM('D', 'M', 'U', 'W')" +
+                "gender VARCHAR(255)" +
                 ");";
 
         String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
