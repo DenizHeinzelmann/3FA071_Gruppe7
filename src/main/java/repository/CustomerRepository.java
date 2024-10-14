@@ -29,7 +29,7 @@ public class CustomerRepository implements AutoCloseable{
         }
     }
 
-    public Customer getCustomerByID(int id) {
+    public Customer getCustomer(int id) {
         String sql = "SELECT * FROM customers WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -47,11 +47,11 @@ public class CustomerRepository implements AutoCloseable{
     public void updateCustomer(int id, Customer customer) {
         String sql = "UPDATE customers SET firstname=?, lastname=?, birthdate=?, gender=? WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            stmt.setString(2, customer.getFirstName());
-            stmt.setString(3, customer.getLastName());
-            stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
-            stmt.setObject(5, customer.getGender().name());
+            stmt.setString(1, customer.getFirstName());
+            stmt.setString(2, customer.getLastName());
+            stmt.setDate(3, Date.valueOf(customer.getBirthDate()));
+            stmt.setObject(4, customer.getGender().name());
+            stmt.setInt(5, id);
             stmt.executeUpdate();
 
 
