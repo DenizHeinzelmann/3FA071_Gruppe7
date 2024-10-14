@@ -11,6 +11,9 @@ public class Customer implements ICustomer {
     private LocalDate birthdate;
     private Gender gender;
 
+    public Customer(String firstname, String lastname, LocalDate birthday, Object gender) {
+    }
+
     @Override
     public void setFirstName(String firstName) {
         this.firstName = firstName;

@@ -29,8 +29,10 @@ public class DatabaseConnection implements IDatabaseConnection {
     public void createAllTables() throws SQLException {
         String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "name VARCHAR(255)," +
-                "email VARCHAR(255)" +
+                "firstname VARCHAR(255)," +
+                "lastname VARCHAR(255)," +
+                "birthdate DATE," +
+                "gender ENUM('D', 'M', 'U', 'W')" +
                 ");";
 
         String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
@@ -79,7 +81,7 @@ public class DatabaseConnection implements IDatabaseConnection {
             System.out.println("Datenbankverbindung geschlossen.");
         }
     }
-
+/*
     // CRUD operations for Customer
     public void createCustomer(String name, String email) throws SQLException {
         String sql = "INSERT INTO customers (name, email) VALUES (?, ?)";
@@ -149,6 +151,6 @@ public class DatabaseConnection implements IDatabaseConnection {
             }
         }
         return false;
-    }
+    }*/
 }
 
