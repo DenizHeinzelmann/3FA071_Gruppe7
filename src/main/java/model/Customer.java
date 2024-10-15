@@ -20,6 +20,14 @@ public class Customer implements ICustomer {
         this.gender = gender;
     }
 
+    public Customer(UUID uid, String firstname, String lastname, LocalDate birthdate, Gender gender) {
+        this.uid = uid;
+        this.lastname = lastname;
+        this.firstName = firstname;
+        this.birthdate = birthdate;
+        this.gender = gender;
+    }
+
     @Override
     public void setFirstName(String firstName) {
         this.firstName = firstName;

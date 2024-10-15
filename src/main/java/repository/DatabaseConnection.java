@@ -18,16 +18,37 @@ public class DatabaseConnection implements IDatabaseConnection {
         String user = properties.getProperty(System.getProperty("user.name") + ".db.user");
         String password = properties.getProperty(System.getProperty("user.name") + ".db.pw");
 
-        connection = DriverManager.getConnection(url, user, password);
-        System.out.println("Verbindung zur Datenbank erfolgreich!");
+        String baseUrl = url.substring(0, url.lastIndexOf("/"));
+        String dbName = url.substring(url.lastIndexOf("/") + 1);
+        connection = DriverManager.getConnection(baseUrl, user, password);
+        System.out.println("Connected to database server successfully!");
+
+        // Create the database if it doesn't exist
+        this.createDatabase(dbName);
+
+        // Connect to the new database
+        connection.setCatalog(dbName);
+        System.out.println("Using database: " + dbName);
+
+        // Create tables
         this.createAllTables();
         return connection;
     }
+
+    private void createDatabase(String dbName) throws SQLException {
+        String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName;
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(sqlCreateDatabase);
+            System.out.println("Database created or already exists: " + dbName);
+        }
+    }
+
     //Created die Tables
     @Override
     public void createAllTables() throws SQLException {
         String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
+                "id UUID PRIMARY KEY," +
                 "firstname VARCHAR(255)," +
                 "lastname VARCHAR(255)," +
                 "birthdate DATE," +
@@ -35,8 +56,8 @@ public class DatabaseConnection implements IDatabaseConnection {
                 ");";
 
         String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "customer_id INT," +
+                "id UUID PRIMARY KEY," +
+                "customer_id UUID," +
                 "reading_type VARCHAR(50)," +
                 "reading_value DECIMAL(10,2)," +
                 "reading_date DATE," +
