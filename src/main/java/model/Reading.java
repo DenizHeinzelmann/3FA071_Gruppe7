@@ -1,10 +1,10 @@
 package model;
 
 import enums.KindOfMeter;
-import interfaces.ICustomer;
 import interfaces.IReading;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class Reading implements IReading {
 
@@ -15,6 +15,17 @@ public class Reading implements IReading {
     private Double meterCount;
     private String meterId;
     private Boolean substitute;
+    private UUID uid;
+
+    public Reading(Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {
+        this.substitute = substitute;
+        this.meterId = meterId;
+        this.meterCount = meterCount;
+        this.kindOfMeter = kindOfMeter;
+        this.dateOfReading = dateOfReading;
+        this.customer = customer;
+        this.comment = comment;
+    }
 
 
     @Override
@@ -90,5 +101,15 @@ public class Reading implements IReading {
     @Override
     public String printDateOfReading() {
         return this.dateOfReading.toString();
+    }
+
+    @Override
+    public UUID getid() {
+        return this.uid;
+    }
+
+    @Override
+    public void setid(UUID id) {
+        this.uid = id;
     }
 }

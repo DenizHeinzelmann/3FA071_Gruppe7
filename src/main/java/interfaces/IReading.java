@@ -5,7 +5,7 @@ import model.Customer;
 
 import java.time.LocalDate;
 
-public interface IReading {
+public interface IReading extends IID {
     void setComment(String comment);
     void setCustomer(Customer customer);
     void setDateOfReading(LocalDate dateOfReading);

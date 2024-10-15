@@ -1,13 +1,11 @@
 package repository;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import interfaces.IDatabaseConnection;
-import model.Customer;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseConnection implements IDatabaseConnection {
@@ -45,6 +43,7 @@ public class DatabaseConnection implements IDatabaseConnection {
                 "unit VARCHAR(10)," +
                 "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL" +
                 ");";
+
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlCreateCustomers);

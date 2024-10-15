@@ -4,12 +4,14 @@ import enums.Gender;
 import interfaces.ICustomer;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public class Customer implements ICustomer {
     private String lastname;
     private String firstName;
     private LocalDate birthdate;
     private Gender gender;
+    private UUID uid;
 
     public Customer(String firstname, String lastname, LocalDate birthdate, Gender gender) {
         this.lastname = lastname;
@@ -56,5 +58,15 @@ public class Customer implements ICustomer {
     @Override
     public Gender getGender() {
         return this.gender;
+    }
+
+    @Override
+    public UUID getid() {
+        return this.uid;
+    }
+
+    @Override
+    public void setid(UUID id) {
+        this.uid = id;
     }
 }
