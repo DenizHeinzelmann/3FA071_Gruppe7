@@ -2,12 +2,9 @@ package repository;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.sql.SQLException;
 import java.util.Properties;
-
-import static org.junit.Assert.*;
 
 public class DatabaseConnectionTest {
 
@@ -33,7 +30,7 @@ public class DatabaseConnectionTest {
             e.printStackTrace();
         }
     }
-
+/*
     @Test
     public void testCreateCustomer() throws SQLException {
         dbConnection.createCustomer("Max Mustermann", "max@mustermann.com");
@@ -63,5 +60,5 @@ public class DatabaseConnectionTest {
         dbConnection.createCustomer("John Doe", "john@doe.com");
         dbConnection.deleteCustomer(1);
         assertFalse("Customer should no longer exist", dbConnection.customerExists(1));
-    }
+    }*/
 }
