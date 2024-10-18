@@ -20,6 +20,8 @@ public class CustomerRepository implements AutoCloseable {
         String sql = "INSERT INTO customers (id, first_name, last_name, birth_date, gender) VALUES (?, ?, ?, ?, ?)";
         UUID id = UUID.randomUUID(); // Generate a new UUID for the customer
         customer.setid(id); // Set the generated ID in the customer object
+        System.out.println("DIE ID IST " + id);
+
 
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setObject(1, id); // Use the generated UUID
@@ -47,6 +49,7 @@ public class CustomerRepository implements AutoCloseable {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Customer(
+                        UUID.fromString(rs.getString("id")),
                         rs.getString("first_name"), // Corrected to 'first_name'
                         rs.getString("last_name"),  // Corrected to 'last_name'
                         rs.getDate("birth_date").toLocalDate(), // Corrected to 'birth_date'

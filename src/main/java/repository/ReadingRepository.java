@@ -22,13 +22,13 @@ public class ReadingRepository implements AutoCloseable {
     public void createReading(Reading reading) {
         String sql = "INSERT INTO readings (id, substitute, meter_id, meter_count, kind_of_meter, date_of_reading, customer_id, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, reading.getid());
+            stmt.setObject(1, reading.getid().toString());
             stmt.setBoolean(2, reading.getSubstitute());
             stmt.setString(3, reading.getMeterId());
             stmt.setDouble(4, reading.getMeterCount());
             stmt.setString(5, reading.getKindOfMeter().toString());
             stmt.setDate(6, java.sql.Date.valueOf(reading.getDateOfReading()));
-            stmt.setObject(7, reading.getCustomer().getid());
+            stmt.setObject(7, reading.getCustomer().getid().toString());
             stmt.setString(8, reading.getComment());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -40,17 +40,17 @@ public class ReadingRepository implements AutoCloseable {
     public Reading getReading(UUID id) {
         String sql = "SELECT * FROM readings WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, id.toString()); // Pass the UUID as a string
+            stmt.setObject(1, id.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Reading(
-                        UUID.fromString(rs.getString("id")), // Convert the string to UUID
+                        UUID.fromString(rs.getString("id")),
                         rs.getBoolean("substitute"),
                         rs.getString("meter_id"),
                         rs.getDouble("meter_count"),
                         KindOfMeter.valueOf(rs.getString("kind_of_meter")),
                         rs.getDate("date_of_reading").toLocalDate(),
-                        customerRepository.getCustomer(UUID.fromString(rs.getString("customer_id"))), // Get the customer by ID
+                        customerRepository.getCustomer(UUID.fromString(rs.getString("customer_id"))),
                         rs.getString("comment")
                 );
             }
