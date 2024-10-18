@@ -1,12 +1,11 @@
 package repository;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import interfaces.IDatabaseConnection;
+
 import java.sql.Connection;
-import java.sql.Date;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseConnection implements IDatabaseConnection {
@@ -19,28 +18,53 @@ public class DatabaseConnection implements IDatabaseConnection {
         String user = properties.getProperty(System.getProperty("user.name") + ".db.user");
         String password = properties.getProperty(System.getProperty("user.name") + ".db.pw");
 
-        connection = DriverManager.getConnection(url, user, password);
-        System.out.println("Verbindung zur Datenbank erfolgreich!");
+        String baseUrl = url.substring(0, url.lastIndexOf("/"));
+        String dbName = url.substring(url.lastIndexOf("/") + 1);
+        connection = DriverManager.getConnection(baseUrl, user, password);
+        System.out.println("Connected to database server successfully!");
+
+        // Create the database if it doesn't exist
+        this.createDatabase(dbName);
+
+        // Connect to the new database
+        connection.setCatalog(dbName);
+        System.out.println("Using database: " + dbName);
+
+        // Create tables
+        this.createAllTables();
         return connection;
     }
+
+    private void createDatabase(String dbName) throws SQLException {
+        String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName;
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(sqlCreateDatabase);
+            System.out.println("Database created or already exists: " + dbName);
+        }
+    }
+
     //Created die Tables
     @Override
     public void createAllTables() throws SQLException {
         String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "name VARCHAR(255)," +
-                "email VARCHAR(255)" +
+                "id UUID PRIMARY KEY," +
+                "firstname VARCHAR(255)," +
+                "lastname VARCHAR(255)," +
+                "birthdate DATE," +
+                "gender VARCHAR(255)" +
                 ");";
 
         String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "customer_id INT," +
+                "id UUID PRIMARY KEY," +
+                "customer_id UUID," +
                 "reading_type VARCHAR(50)," +
                 "reading_value DECIMAL(10,2)," +
                 "reading_date DATE," +
                 "unit VARCHAR(10)," +
                 "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL" +
                 ");";
+
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlCreateCustomers);
@@ -78,7 +102,7 @@ public class DatabaseConnection implements IDatabaseConnection {
             System.out.println("Datenbankverbindung geschlossen.");
         }
     }
-
+/*
     // CRUD operations for Customer
     public void createCustomer(String name, String email) throws SQLException {
         String sql = "INSERT INTO customers (name, email) VALUES (?, ?)";
@@ -148,6 +172,6 @@ public class DatabaseConnection implements IDatabaseConnection {
             }
         }
         return false;
-    }
+    }*/
 }
 
