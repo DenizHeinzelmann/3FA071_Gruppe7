@@ -12,16 +12,16 @@ import java.util.UUID;
 
 class CustomerRepositoryTest {
 
-    private CustomerRepository customerRepository;
+    private repository.CustomerRepository customerRepository;
     private UUID customerID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() throws SQLException {
         Properties properties = new Properties();
         properties.setProperty(System.getProperty("user.name") + ".db.url", "jdbc:mariadb://localhost:3306/hausfix_db");
-        properties.setProperty(System.getProperty("user.name") + ".db.user", "test");
+        properties.setProperty(System.getProperty("user.name") + ".db.user", "root");
         properties.setProperty(System.getProperty("user.name") + ".db.pw", "hausverwaltung");
-        this.customerRepository = new CustomerRepository(properties);
+        this.customerRepository = new repository.CustomerRepository(properties);
     }
 
 
