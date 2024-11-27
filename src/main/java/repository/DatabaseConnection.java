@@ -9,9 +9,8 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseConnection implements IDatabaseConnection {
-    private Connection connection;
+    protected Connection connection;
 
-    // Öffnet DB-Verbindung mit übergebenen Werten von .property file
     @Override
     public Connection openConnection(Properties properties) throws SQLException {
         String url = properties.getProperty(System.getProperty("user.name") + ".db.url");
@@ -23,20 +22,23 @@ public class DatabaseConnection implements IDatabaseConnection {
         connection = DriverManager.getConnection(baseUrl, user, password);
         System.out.println("Connected to database server successfully!");
 
-        // Create the database if it doesn't exist
+        // Erstellen Sie die Datenbank, falls sie nicht existiert
         this.createDatabase(dbName);
 
-        // Connect to the new database
+        // Verbinden Sie sich mit der neuen Datenbank
         connection.setCatalog(dbName);
         System.out.println("Using database: " + dbName);
 
-        // Create tables
+        // Entfernen Sie die vorhandenen Tabellen, um das Schema zu aktualisieren
+        this.removeAllTables();
+
+        // Erstellen Sie die Tabellen mit dem aktuellen Schema
         this.createAllTables();
         return connection;
     }
 
     private void createDatabase(String dbName) throws SQLException {
-        String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName;
+        String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName + " DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
 
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sqlCreateDatabase);
@@ -44,27 +46,27 @@ public class DatabaseConnection implements IDatabaseConnection {
         }
     }
 
-    //Created die Tables
     @Override
     public void createAllTables() throws SQLException {
         String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
-                "id UUID PRIMARY KEY," +
+                "id VARCHAR(36) PRIMARY KEY," +
                 "firstname VARCHAR(255)," +
                 "lastname VARCHAR(255)," +
                 "birthdate DATE," +
-                "gender VARCHAR(255)" +
+                "gender VARCHAR(10)" +
                 ");";
 
         String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
-                "id UUID PRIMARY KEY," +
-                "customer_id UUID," +
-                "reading_type VARCHAR(50)," +
-                "reading_value DECIMAL(10,2)," +
-                "reading_date DATE," +
-                "unit VARCHAR(10)," +
+                "id VARCHAR(36) PRIMARY KEY," +
+                "customer_id VARCHAR(36)," +
+                "kind_of_meter VARCHAR(50)," +
+                "meter_count DECIMAL(10,2)," +
+                "date_of_reading DATE," +
+                "meter_id VARCHAR(255)," +
+                "substitute BOOLEAN," +
+                "comment TEXT," +
                 "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL" +
                 ");";
-
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlCreateCustomers);
@@ -74,8 +76,8 @@ public class DatabaseConnection implements IDatabaseConnection {
 
     @Override
     public void truncateAllTables() throws SQLException {
-        String sqlTruncateCustomers = "TRUNCATE TABLE customers;";
         String sqlTruncateReadings = "TRUNCATE TABLE readings;";
+        String sqlTruncateCustomers = "TRUNCATE TABLE customers;";
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlTruncateReadings);
@@ -85,16 +87,15 @@ public class DatabaseConnection implements IDatabaseConnection {
 
     @Override
     public void removeAllTables() throws SQLException {
-        String sqlDropCustomers = "DROP TABLE IF EXISTS customers;";
         String sqlDropReadings = "DROP TABLE IF EXISTS readings;";
+        String sqlDropCustomers = "DROP TABLE IF EXISTS customers;";
 
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sqlDropCustomers);
             stmt.execute(sqlDropReadings);
+            stmt.execute(sqlDropCustomers);
         }
     }
 
-    // Closed die Verbindung zur Datenbank
     @Override
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
@@ -102,76 +103,4 @@ public class DatabaseConnection implements IDatabaseConnection {
             System.out.println("Datenbankverbindung geschlossen.");
         }
     }
-/*
-    // CRUD operations for Customer
-    public void createCustomer(String name, String email) throws SQLException {
-        String sql = "INSERT INTO customers (name, email) VALUES (?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            stmt.setString(2, email);
-            stmt.executeUpdate();
-        }
-    }
-
-    public Customer readCustomerById(int id) throws SQLException {
-        String sql = "SELECT * FROM customers WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new Customer(rs.getInt("id"), rs.getString("name"), rs.getString("email"));
-            }
-        }
-        return null; // return null if customer is not found
-    }
-
-    public void updateCustomer(int id, String name, String email) throws SQLException {
-        String sql = "UPDATE customers SET name = ?, email = ? WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            stmt.setString(2, email);
-            stmt.setInt(3, id);
-            stmt.executeUpdate();
-        }
-    }
-
-    public void deleteCustomer(int id) throws SQLException {
-        String sqlNullifyReadings = "UPDATE readings SET customer_id = NULL WHERE customer_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sqlNullifyReadings)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        }
-
-        String sqlDeleteCustomer = "DELETE FROM customers WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sqlDeleteCustomer)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        }
-    }
-
-    public List<Customer> readAllCustomers() throws SQLException {
-        String sql = "SELECT * FROM customers";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            ResultSet rs = stmt.executeQuery();
-            List<Customer> customers = new ArrayList<>();
-            while (rs.next()) {
-                Customer customer = new Customer(rs.getInt("id"), rs.getString("name"), rs.getString("email"));
-                customers.add(customer);
-            }
-            return customers;
-        }
-    }
-
-    public boolean customerExists(int customerId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM customers WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, customerId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        }
-        return false;
-    }*/
 }
-

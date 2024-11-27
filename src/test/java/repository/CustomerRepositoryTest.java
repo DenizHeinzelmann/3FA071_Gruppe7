@@ -19,11 +19,10 @@ class CustomerRepositoryTest {
     void setUp() throws SQLException {
         Properties properties = new Properties();
         properties.setProperty(System.getProperty("user.name") + ".db.url", "jdbc:mariadb://localhost:3306/hausfix_db");
-        properties.setProperty(System.getProperty("user.name") + ".db.user", "test");
+        properties.setProperty(System.getProperty("user.name") + ".db.user", "root");
         properties.setProperty(System.getProperty("user.name") + ".db.pw", "hausverwaltung");
         this.customerRepository = new CustomerRepository(properties);
     }
-
 
     @Test
     void createCustomer() {

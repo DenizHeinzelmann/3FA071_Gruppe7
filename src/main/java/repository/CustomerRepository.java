@@ -7,9 +7,9 @@ import java.sql.*;
 import java.util.Properties;
 import java.util.UUID;
 
-public class CustomerRepository implements AutoCloseable{
-    private final DatabaseConnection db_connection;
-    private final Connection connection;
+public class CustomerRepository implements AutoCloseable {
+    protected final DatabaseConnection db_connection;
+    protected final Connection connection;
 
     public CustomerRepository(Properties properties) throws SQLException {
         this.db_connection = new DatabaseConnection();
@@ -17,18 +17,23 @@ public class CustomerRepository implements AutoCloseable{
     }
 
     public UUID createCustomer(Customer customer) {
-        String sql = "INSERT INTO customers (id,firstname, lastname, birthdate, gender) VALUES (?, ?, ?, ?, ?)";
-        UUID id = UUID.randomUUID();
+        String sql = "INSERT INTO customers (id, firstname, lastname, birthdate, gender) VALUES (?, ?, ?, ?, ?)";
+        UUID id = customer.getid();
+        if (id == null) {
+            id = UUID.randomUUID();
+            customer.setid(id);
+        }
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, id);
+            stmt.setString(1, id.toString());
             stmt.setString(2, customer.getFirstName());
             stmt.setString(3, customer.getLastName());
             stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
-            stmt.setObject(5, customer.getGender().name());
+            stmt.setString(5, customer.getGender().name());
             stmt.executeUpdate();
             return id;
 
         } catch (SQLException e) {
+            System.err.println("SQL Error in createCustomer: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -36,13 +41,24 @@ public class CustomerRepository implements AutoCloseable{
     public Customer getCustomer(UUID id) {
         String sql = "SELECT * FROM customers WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, id);
+            stmt.setString(1, id.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Customer(rs.getString("firstname"), rs.getString("lastname"), rs.getDate("birthdate").toLocalDate(), Gender.valueOf(rs.getString("gender")));
+                String customerIdStr = rs.getString("id");
+                UUID customerId = UUID.fromString(customerIdStr);
+
+                Customer customer = new Customer(
+                        customerId,
+                        rs.getString("firstname"),
+                        rs.getString("lastname"),
+                        rs.getDate("birthdate").toLocalDate(),
+                        Gender.valueOf(rs.getString("gender"))
+                );
+                return customer;
             }
 
         } catch (SQLException e) {
+            System.err.println("SQL Error in getCustomer: " + e.getMessage());
             throw new RuntimeException(e);
         }
         return null;
@@ -54,12 +70,12 @@ public class CustomerRepository implements AutoCloseable{
             stmt.setString(1, customer.getFirstName());
             stmt.setString(2, customer.getLastName());
             stmt.setDate(3, Date.valueOf(customer.getBirthDate()));
-            stmt.setObject(4, customer.getGender().name());
-            stmt.setObject(5, id);
+            stmt.setString(4, customer.getGender().name());
+            stmt.setString(5, id.toString());
             stmt.executeUpdate();
 
-
         } catch (SQLException e) {
+            System.err.println("SQL Error in updateCustomer: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -67,14 +83,14 @@ public class CustomerRepository implements AutoCloseable{
     public void deleteCustomer(UUID id) {
         String sql = "DELETE FROM customers WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, id);
+            stmt.setString(1, id.toString());
             stmt.executeUpdate();
 
         } catch (SQLException e) {
+            System.err.println("SQL Error in deleteCustomer: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
-
 
     @Override
     public void close() throws Exception {
