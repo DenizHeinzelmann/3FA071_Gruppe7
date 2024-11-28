@@ -26,7 +26,7 @@ class CustomerRepositoryTest {
 
     @Test
     void createCustomer() {
-        Customer customer = new Customer(this.customerID,"Steve", "Müller", LocalDate.now(), Gender.M);
+        Customer customer = new Customer(this.customerID,"Hans", "Müller", LocalDate.now(), Gender.M);
         this.customerRepository.createCustomer(customer);
     }
 

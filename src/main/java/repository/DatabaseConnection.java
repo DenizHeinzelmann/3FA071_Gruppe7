@@ -20,22 +20,20 @@ public class DatabaseConnection implements IDatabaseConnection {
         String baseUrl = url.substring(0, url.lastIndexOf("/"));
         String dbName = url.substring(url.lastIndexOf("/") + 1);
         connection = DriverManager.getConnection(baseUrl, user, password);
+        connection.setAutoCommit(true); // Aktiviert Auto-Commit
         System.out.println("Connected to database server successfully!");
 
-        // Erstellen Sie die Datenbank, falls sie nicht existiert
         this.createDatabase(dbName);
 
-        // Verbinden Sie sich mit der neuen Datenbank
         connection.setCatalog(dbName);
         System.out.println("Using database: " + dbName);
 
-        // Entfernen Sie die vorhandenen Tabellen, um das Schema zu aktualisieren
-        this.removeAllTables();
-
-        // Erstellen Sie die Tabellen mit dem aktuellen Schema
+        // Erstelle Tabellen nur, wenn sie nicht existieren
         this.createAllTables();
+
         return connection;
     }
+
 
     private void createDatabase(String dbName) throws SQLException {
         String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName + " DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";

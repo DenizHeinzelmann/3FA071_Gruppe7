@@ -20,7 +20,6 @@ public class ReadingRepository implements AutoCloseable {
     }
 
     public UUID createReading(Reading reading) {
-        // Überprüfen, ob ein Kunde vorhanden ist
         if (reading.getCustomer() == null) {
             throw new IllegalArgumentException("Reading must have a customer.");
         }
@@ -138,5 +137,21 @@ public class ReadingRepository implements AutoCloseable {
     @Override
     public void close() throws Exception {
         this.db_connection.closeConnection();
+    }
+
+    public void deleteReadingById(UUID id) {
+        String sql = "DELETE FROM readings WHERE id = ?";
+        try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
+            stmt.setObject(1, id); // Setze die ID als Parameter
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Reading mit ID " + id + " wurde erfolgreich gelöscht.");
+            } else {
+                System.out.println("Reading mit ID " + id + " wurde nicht gefunden.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Fehler beim Löschen des Readings: " + e.getMessage(), e);
+        }
     }
 }
