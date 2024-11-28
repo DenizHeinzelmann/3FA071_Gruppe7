@@ -13,6 +13,7 @@ public class Customer implements ICustomer {
     private Gender gender;
     private UUID uid;
 
+
     public Customer(String firstname, String lastname, LocalDate birthdate, Gender gender) {
         this.lastname = lastname;
         this.firstName = firstname;
