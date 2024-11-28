@@ -28,22 +28,38 @@ class ReadingRepositoryTest {
 
         this.readingRepository = new ReadingRepository(properties);
         this.customerRepository = new CustomerRepository(properties);
+
+        // Create a customer and a reading to use for the tests
+        Customer customer = new Customer(UUID.randomUUID(), "Test", "Customer", LocalDate.of(1990, 1, 1), Gender.M);
+        this.customerID = this.customerRepository.createCustomer(customer);
+
+        Reading reading = new Reading(
+                UUID.randomUUID(),
+                true,
+                "Meter123",
+                123.45,
+                KindOfMeter.WASSER,
+                LocalDate.now(),
+                customer,
+                "Initial Reading"
+        );
+        this.readingID = this.readingRepository.createReading(reading);
     }
 
     @Test
     void createReading() {
-        // Neuer Kunde
-        Customer customer = new Customer("Anna", "Schmidt", LocalDate.of(1985, 5, 15), Gender.W);
-        customer.setid(UUID.randomUUID());
+        Customer customer = new Customer(UUID.randomUUID(), "Anna", "Schmidt", LocalDate.of(1985, 5, 15), Gender.W);
+        this.customerID = this.customerRepository.createCustomer(customer);
 
         Reading reading = new Reading(
+                UUID.randomUUID(),
                 true,
                 "Meter456",
                 200.75,
                 KindOfMeter.WASSER,
                 LocalDate.now(),
                 customer,
-                "Dritte Ablesung"
+                "Test Ablesung"
         );
 
         UUID newReadingId = this.readingRepository.createReading(reading);
@@ -59,13 +75,14 @@ class ReadingRepositoryTest {
         Reading reading = this.readingRepository.getReading(this.readingID);
         assert reading != null;
         assert reading.getMeterId().equals("Meter123");
-        assert reading.getCustomer().getFirstName().equals("Steve");
+        assert reading.getCustomer().getFirstName().equals("Test");
     }
 
     @Test
     void updateReading() {
         Reading reading = this.readingRepository.getReading(this.readingID);
         assert reading != null;
+
         reading.setMeterCount(150.0);
         reading.setComment("Aktualisierte Ablesung");
         this.readingRepository.updateReading(this.readingID, reading);
@@ -79,6 +96,7 @@ class ReadingRepositoryTest {
     @Test
     void deleteReading() {
         this.readingRepository.deleteReading(this.readingID);
+
         Reading reading = this.readingRepository.getReading(this.readingID);
         assert reading == null;
     }

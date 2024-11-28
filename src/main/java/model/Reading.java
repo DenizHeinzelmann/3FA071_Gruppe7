@@ -17,6 +17,17 @@ public class Reading implements IReading {
     private Boolean substitute;
     private UUID uid;
 
+    public Reading(UUID uid, Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {
+        this.uid = uid; // Set the UUID
+        this.substitute = substitute;
+        this.meterId = meterId;
+        this.meterCount = meterCount;
+        this.kindOfMeter = kindOfMeter;
+        this.dateOfReading = dateOfReading;
+        this.customer = customer;
+        this.comment = comment;
+    }
+
     public Reading(Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {
         this.substitute = substitute;
         this.meterId = meterId;
