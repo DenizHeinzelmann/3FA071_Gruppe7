@@ -18,7 +18,6 @@ public class Reading implements IReading {
     private UUID uid;
 
     public Reading(UUID uid, Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {
-<<<<<<< HEAD
         this.uid = uid; // Set the UUID
         this.substitute = substitute;
         this.meterId = meterId;
@@ -30,9 +29,7 @@ public class Reading implements IReading {
     }
 
     public Reading(Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {
-=======
         this.uid = uid; // UUID generieren
->>>>>>> 8ad9d8f5a6c457b465869192ffeca7d20b22b40a
         this.substitute = substitute;
         this.meterId = meterId;
         this.meterCount = meterCount;
