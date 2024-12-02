@@ -60,7 +60,12 @@ public class Server {
                     int statusCode = getResponseStatusCode(response);
 
                     // Send the response with the appropriate status code
-                    String responseString = response != null ? response.toString() : "OK";
+                    String responseString;
+                    if (response instanceof ResponseWrapper){
+                        responseString = ((ResponseWrapper) response).responseData;
+                    } else {
+                        responseString = response != null ? response.toString() : "OK";
+                    }
                     exchange.sendResponseHeaders(statusCode, responseString.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(responseString.getBytes());
