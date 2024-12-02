@@ -4,12 +4,14 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import interfaces.Route;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.Map;
 
 public class Server {
 
@@ -112,5 +114,27 @@ public class Server {
         public int getStatusCode() {
             return statusCode;
         }
+    }
+    public JSONObject readJsonRequest(String response) {
+        return new JSONObject(response);
+    }
+
+    public JSONObject createJsonResponse(boolean status, String message) {
+        JSONObject responseJson = new JSONObject();
+
+        responseJson.put("success", status);
+        responseJson.put("message", message);
+
+        return responseJson;
+    }
+
+    public <T> JSONObject createJsonResponse(boolean status, String message, Map<String, T> data) {
+        JSONObject responseJson = new JSONObject();
+        if (status) {
+            responseJson.put("status", "success");
+            responseJson.put("message", message);
+            responseJson.put("data", data);
+        }
+        return responseJson;
     }
 }
