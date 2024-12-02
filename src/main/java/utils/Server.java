@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
-
 public class Server {
 
     public static void startServer(Server serverClass) throws Exception {
@@ -26,12 +25,13 @@ public class Server {
         server.start();
         System.out.println("utils.Server started on http://localhost:8000");
     }
+
     public static void registerRoutes(HttpServer server, Object handlerInstance) {
         // Get all methods from the handler class
         Method[] methods = handlerInstance.getClass().getDeclaredMethods();
 
         for (Method method : methods) {
-            // Check if the method has the @interfaces.Route annotation
+            // Check if the method has the @Route annotation
             if (method.isAnnotationPresent(Route.class)) {
                 Route routeAnnotation = method.getAnnotation(Route.class);
 
@@ -48,16 +48,18 @@ public class Server {
     private static HttpHandler createHandler(Object handlerInstance, Method method, Route routeAnnotation) {
         return exchange -> {
             // Check if the HTTP method matches one of the allowed methods from the annotation
-
             String requestMethod = exchange.getRequestMethod();
             if (Arrays.asList(routeAnnotation.method()).contains(requestMethod)) {
                 try {
                     // Call the annotated method dynamically using reflection
                     Object response = method.invoke(handlerInstance, exchange);
 
-                    // Send the response
+                    // Get the custom response status if any, else use 200 OK
+                    int statusCode = getResponseStatusCode(response);
+
+                    // Send the response with the appropriate status code
                     String responseString = response != null ? response.toString() : "OK";
-                    exchange.sendResponseHeaders(200, responseString.getBytes().length);
+                    exchange.sendResponseHeaders(statusCode, responseString.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(responseString.getBytes());
                     os.close();
@@ -70,6 +72,12 @@ public class Server {
         };
     }
 
+    private static int getResponseStatusCode(Object response) {
+        if (response instanceof ResponseWrapper) {
+            return ((ResponseWrapper) response).getStatusCode();
+        }
+        return 200;
+    }
 
     protected static String getRequestMethod(HttpExchange exchange){
         return exchange.getRequestMethod();
@@ -87,4 +95,22 @@ public class Server {
         return requestBody.toString();
     }
 
+    // Response wrapper to encapsulate both response data and status code
+    public static class ResponseWrapper {
+        private final String responseData;
+        private final int statusCode;
+
+        public ResponseWrapper(String responseData, int statusCode) {
+            this.responseData = responseData;
+            this.statusCode = statusCode;
+        }
+
+        public String getResponseData() {
+            return responseData;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+    }
 }
