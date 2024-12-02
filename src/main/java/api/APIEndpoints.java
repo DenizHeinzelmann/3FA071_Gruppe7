@@ -16,16 +16,21 @@ public class APIEndpoints extends Server {
     @Route(path = "/customer", method = {"GET", "POST", "PUT"})
     public Object create(HttpExchange exchange) throws IOException {
         if (Objects.equals(getRequestMethod(exchange), "POST")) {
-            //convert request to json
-            JSONObject requestBody = readJsonRequest(readRequestBody(exchange));
-
-            //do something with request parameters
-            String name = requestBody.getString("name");
-
-            //create response
-            JSONObject responseJson = createJsonResponse(true, "Resource created with data: " + requestBody);
+            String requestBody = readRequestBody(exchange);
+            if (requestBody.isEmpty()){
+                return new ResponseWrapper("POST request needs a json body", 400);
+            }
+            JSONObject jsonBody = readJsonRequest(requestBody);
+            JSONObject responseJson = createJsonResponse(true, "Resource created with data: " + jsonBody.toString());
 
             return new ResponseWrapper(responseJson.toString(), 201);
+
+
+            //do something with request parameters
+            //String name = requestBody.getString("name");
+
+            //create response
+
         }
 
         JSONObject defaultResponseJson = createJsonResponse(false, "GET, PUT is not yet implemented");

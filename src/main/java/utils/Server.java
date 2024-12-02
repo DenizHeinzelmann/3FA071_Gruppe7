@@ -60,7 +60,12 @@ public class Server {
                     int statusCode = getResponseStatusCode(response);
 
                     // Send the response with the appropriate status code
-                    String responseString = response != null ? response.toString() : "OK";
+                    String responseString;
+                    if (response instanceof ResponseWrapper){
+                        responseString = ((ResponseWrapper) response).responseData;
+                    } else {
+                        responseString = response != null ? response.toString() : "OK";
+                    }
                     exchange.sendResponseHeaders(statusCode, responseString.getBytes().length);
                     OutputStream os = exchange.getResponseBody();
                     os.write(responseString.getBytes());
@@ -76,7 +81,7 @@ public class Server {
 
     private static int getResponseStatusCode(Object response) {
         if (response instanceof ResponseWrapper) {
-            return ((ResponseWrapper) response).getStatusCode();
+            return ((ResponseWrapper) response).statusCode();
         }
         return 200;
     }
@@ -98,22 +103,7 @@ public class Server {
     }
 
     // Response wrapper to encapsulate both response data and status code
-    public static class ResponseWrapper {
-        private final String responseData;
-        private final int statusCode;
-
-        public ResponseWrapper(String responseData, int statusCode) {
-            this.responseData = responseData;
-            this.statusCode = statusCode;
-        }
-
-        public String getResponseData() {
-            return responseData;
-        }
-
-        public int getStatusCode() {
-            return statusCode;
-        }
+        public record ResponseWrapper(String responseData, int statusCode) {
     }
     public JSONObject readJsonRequest(String response) {
         return new JSONObject(response);
