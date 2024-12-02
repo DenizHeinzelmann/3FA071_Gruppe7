@@ -25,14 +25,28 @@ public class CustomerRepository implements AutoCloseable {
             stmt.setString(1, id.toString());
             stmt.setString(2, customer.getFirstName());
             stmt.setString(3, customer.getLastName());
-            stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
-            stmt.setString(5, customer.getGender().name());
+
+            // Fix: Prüfen auf null für birthdate
+            if (customer.getBirthDate() != null) {
+                stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
+            } else {
+                stmt.setNull(4, Types.DATE);
+            }
+
+            // Fix: Prüfen auf null für gender
+            if (customer.getGender() != null) {
+                stmt.setString(5, customer.getGender().name());
+            } else {
+                stmt.setNull(5, Types.VARCHAR);
+            }
+
             stmt.executeUpdate();
             return id;
         } catch (SQLException e) {
             throw new RuntimeException("Error while creating customer", e);
         }
     }
+
 
     public Customer getCustomer(UUID id) {
         String sql = "SELECT * FROM customers WHERE id=?";
