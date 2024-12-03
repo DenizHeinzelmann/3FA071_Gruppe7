@@ -20,29 +20,26 @@ public class ReadingRepository implements AutoCloseable {
     }
 
     public UUID createReading(Reading reading) {
-        // Überprüfen, ob ein Kunde vorhanden ist
         if (reading.getCustomer() == null) {
             throw new IllegalArgumentException("Reading must have a customer.");
         }
 
         UUID customerId = reading.getCustomer().getid();
         if (customerId == null) {
-            customerId = UUID.randomUUID();
-            reading.getCustomer().setid(customerId);
+            throw new IllegalArgumentException("Customer ID cannot be null for a reading.");
         }
 
-        // Überprüfen, ob der Kunde in der DB existiert
+        // Prüfe, ob der Kunde existiert
         Customer customerInDb = customerRepository.getCustomer(customerId);
         if (customerInDb == null) {
-            // Kunde existiert nicht, also hinzufügen
-            customerRepository.createCustomer(reading.getCustomer());
+            throw new IllegalArgumentException("Customer with ID " + customerId + " does not exist.");
         }
 
         String sql = "INSERT INTO readings (id, customer_id, kind_of_meter, meter_count, date_of_reading, meter_id, substitute, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         UUID id = UUID.randomUUID();
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setString(1, id.toString()); // UUID als String setzen
-            stmt.setString(2, customerId.toString()); // UUID als String setzen
+            stmt.setString(1, id.toString());
+            stmt.setString(2, customerId.toString());
             stmt.setString(3, reading.getKindOfMeter().name());
             stmt.setDouble(4, reading.getMeterCount());
             stmt.setDate(5, Date.valueOf(reading.getDateOfReading()));
@@ -52,10 +49,10 @@ public class ReadingRepository implements AutoCloseable {
             stmt.executeUpdate();
             return id;
         } catch (SQLException e) {
-            System.err.println("SQL Error in createReading: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error creating reading", e);
         }
     }
+
 
     public Reading getReading(UUID id) {
         String sql = "SELECT * FROM readings WHERE id=?";
