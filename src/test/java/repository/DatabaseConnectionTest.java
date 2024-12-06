@@ -22,11 +22,10 @@ class DatabaseConnectionTest {
 
     @BeforeEach
     void setUp() throws SQLException, IOException {
-        // Lade die Properties aus der Datei
         Properties properties = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("database.properties")) {
             if (input == null) {
-                throw new FileNotFoundException("Die Datei 'database.properties' wurde nicht gefunden!");
+                throw new FileNotFoundException("'database.properties' not found!");
             }
             properties.load(input);
         }
@@ -38,31 +37,29 @@ class DatabaseConnectionTest {
     @AfterEach
     void tearDown() throws SQLException {
         if (connection != null && !connection.isClosed()) {
-            databaseConnection.removeAllTables(); // Ensure this runs before the connection is closed
-            databaseConnection.closeConnection(); // Close the connection after cleaning up
+            databaseConnection.removeAllTables();
+            databaseConnection.closeConnection();
         } else {
-            System.out.println("Die Verbindung war bereits geschlossen.");
+            System.out.println("Connection was already closed.");
         }
     }
 
-
     @Test
     void testOpenConnection() throws SQLException {
-        assertNotNull(connection, "Die Verbindung sollte erfolgreich hergestellt worden sein.");
-        assertFalse(connection.isClosed(), "Die Verbindung sollte geöffnet sein.");
+        assertNotNull(connection, "Connection should be successfully established.");
+        assertFalse(connection.isClosed(), "Connection should be open.");
     }
 
     @Test
     void testCreateAllTables() throws SQLException {
         databaseConnection.createAllTables();
 
-        // Prüfen, ob die Tabellen existieren
         try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CUSTOMERS'");
-            assertTrue(rs.next(), "Die Tabelle 'customers' sollte existieren.");
+            assertTrue(rs.next(), "Table 'customers' should exist.");
 
             rs = stmt.executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'READINGS'");
-            assertTrue(rs.next(), "Die Tabelle 'readings' sollte existieren.");
+            assertTrue(rs.next(), "Table 'readings' should exist.");
         }
     }
 
@@ -73,15 +70,14 @@ class DatabaseConnectionTest {
         String sqlInsert = "INSERT INTO customers (id, firstname, lastname, birthdate, gender) VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Max', 'Mustermann', '1990-01-01', 'M')";
         try (Statement stmt = connection.createStatement()) {
             int rowsInserted = stmt.executeUpdate(sqlInsert);
-            assertEquals(1, rowsInserted, "Eine Zeile sollte erfolgreich in die Tabelle 'customers' eingefügt werden.");
+            assertEquals(1, rowsInserted, "One row should be successfully inserted into 'customers'.");
         }
 
-        // Überprüfen, ob die Daten korrekt eingefügt wurden
         String sqlSelect = "SELECT * FROM customers WHERE id = '123e4567-e89b-12d3-a456-426614174000'";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sqlSelect)) {
-            assertTrue(rs.next(), "Es sollte ein Eintrag mit der angegebenen ID existieren.");
-            assertEquals("Max", rs.getString("firstname"), "Der Vorname sollte 'Max' sein.");
-            assertEquals("Mustermann", rs.getString("lastname"), "Der Nachname sollte 'Mustermann' sein.");
+            assertTrue(rs.next(), "An entry with the given ID should exist.");
+            assertEquals("Max", rs.getString("firstname"), "First name should be 'Max'.");
+            assertEquals("Mustermann", rs.getString("lastname"), "Last name should be 'Mustermann'.");
         }
     }
 
@@ -89,7 +85,7 @@ class DatabaseConnectionTest {
     void testTruncateAllTables() throws SQLException {
         databaseConnection.createAllTables();
 
-        // Daten in die Tabellen einfügen
+        // Insert data into tables
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("INSERT INTO customers (id, firstname, lastname, birthdate, gender) VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Max', 'Mustermann', '1990-01-01', 'M')");
             stmt.executeUpdate("INSERT INTO readings (id, customer_id, kind_of_meter, meter_count, date_of_reading, meter_id, substitute, comment) VALUES ('223e4567-e89b-12d3-a456-426614174001', '123e4567-e89b-12d3-a456-426614174000', 'STROM', 100.50, '2024-01-01', 'M123', false, 'Initial Reading')");
@@ -97,15 +93,14 @@ class DatabaseConnectionTest {
 
         databaseConnection.truncateAllTables();
 
-        // Überprüfen, ob die Tabellen geleert wurden
         try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS count FROM customers");
             assertTrue(rs.next());
-            assertEquals(0, rs.getInt("count"), "Die Tabelle 'customers' sollte geleert sein.");
+            assertEquals(0, rs.getInt("count"), "'customers' table should be empty.");
 
             rs = stmt.executeQuery("SELECT COUNT(*) AS count FROM readings");
             assertTrue(rs.next());
-            assertEquals(0, rs.getInt("count"), "Die Tabelle 'readings' sollte geleert sein.");
+            assertEquals(0, rs.getInt("count"), "'readings' table should be empty.");
         }
     }
 
@@ -114,19 +109,19 @@ class DatabaseConnectionTest {
         databaseConnection.createAllTables();
         databaseConnection.removeAllTables();
 
-        // Überprüfen, ob die Tabellen entfernt wurden
+        // Check if tables are removed
         try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CUSTOMERS'");
-            assertFalse(rs.next(), "Die Tabelle 'customers' sollte nicht mehr existieren.");
+            assertFalse(rs.next(), "'customers' table should no longer exist.");
 
             rs = stmt.executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'READINGS'");
-            assertFalse(rs.next(), "Die Tabelle 'readings' sollte nicht mehr existieren.");
+            assertFalse(rs.next(), "'readings' table should no longer exist.");
         }
     }
 
     @Test
     void testCloseConnection() throws SQLException {
         databaseConnection.closeConnection();
-        assertTrue(connection.isClosed(), "Die Verbindung sollte geschlossen sein.");
+        assertTrue(connection.isClosed(), "Connection should be closed.");
     }
 }

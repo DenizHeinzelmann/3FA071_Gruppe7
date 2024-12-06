@@ -164,6 +164,5 @@ public class ReadingRepository implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
-        // Keine spezielle Aktion notwendig, da `DatabaseConnection` Singleton ist
     }
 }

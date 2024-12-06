@@ -48,7 +48,7 @@ public class CSVReader {
 
             while ((line = reader.readLine()) != null) {
                 if (isHeader) {
-                    isHeader = false; // Skip the header line
+                    isHeader = false; // Skip header line
                     continue;
                 }
 

@@ -33,7 +33,6 @@ public class DatabaseConnection implements IDatabaseConnection {
             return connection;
         }
 
-        // Debugging: Check system user and properties keys
         System.out.println("Aktueller Benutzer: " + System.getProperty("user.name"));
         String userName = System.getProperty("user.name");
         System.out.println("Aktueller Benutzer: " + userName);
@@ -44,7 +43,6 @@ public class DatabaseConnection implements IDatabaseConnection {
         String user = properties.getProperty(userName + ".db.user");
         String password = properties.getProperty(userName + ".db.pw");
 
-        // Debugging: Check retrieved properties
         System.out.println("Geladene Properties:");
         System.out.println("URL: " + url);
         System.out.println("Benutzer: " + user);
@@ -145,7 +143,7 @@ public class DatabaseConnection implements IDatabaseConnection {
             stmt.execute(sqlTruncateCustomers);
             System.out.println("Kundentabelle erfolgreich geleert.");
 
-            stmt.execute(enableForeignKeyChecks); // Re-enable foreign key checks
+            stmt.execute(enableForeignKeyChecks);
         } catch (SQLException e) {
             System.err.println("Fehler beim Leeren der Tabellen: " + e.getMessage());
             throw e;
