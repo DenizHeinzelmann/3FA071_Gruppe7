@@ -2,6 +2,7 @@ package repository;
 
 import enums.Gender;
 import model.Customer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,74 +14,76 @@ import java.time.LocalDate;
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class CustomerRepositoryTest {
 
-    private CustomerRepository customerRepository;
-    private UUID customerID = UUID.randomUUID();
+    private static CustomerRepository customerRepository;
+    private UUID customerID;
 
-    @BeforeEach
-    void setUp() throws SQLException, IOException {
-        // Load properties from the database.properties file
+    @BeforeAll
+    static void setUpBeforeAll() throws SQLException, IOException {
         Properties properties = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("database.properties")) {
+        try (InputStream input = CustomerRepositoryTest.class.getClassLoader().getResourceAsStream("database.properties")) {
             if (input == null) {
                 throw new FileNotFoundException("'database.properties' not found!");
             }
             properties.load(input);
         }
 
-        // Open the database connection
         DatabaseConnection.getInstance().openConnection(properties);
-
-        // Initialize the repository
-        this.customerRepository = new CustomerRepository();
+        customerRepository = new CustomerRepository();
     }
 
+    @BeforeEach
+    void setUp() {
+        this.customerID = UUID.randomUUID();
+    }
 
     @Test
     void createCustomer() {
         Customer customer = new Customer(this.customerID, "Deniz", "Heinzelmann", LocalDate.now(), Gender.M);
-        this.customerRepository.createCustomer(customer);
+        customerRepository.createCustomer(customer);
 
-        Customer fetchedCustomer = this.customerRepository.getCustomer(this.customerID);
-        assert fetchedCustomer != null;
-        assert fetchedCustomer.getFirstName().equals("Deniz");
-        assert fetchedCustomer.getLastName().equals("Heinzelmann");
+        Customer fetchedCustomer = customerRepository.getCustomer(this.customerID);
+        assertNotNull(fetchedCustomer);
+        assertEquals("Deniz", fetchedCustomer.getFirstName());
+        assertEquals("Heinzelmann", fetchedCustomer.getLastName());
     }
 
     @Test
     void getCustomer() {
         Customer customer = new Customer(this.customerID, "William", "Shakespeare", LocalDate.now(), Gender.M);
-        this.customerRepository.createCustomer(customer);
+        customerRepository.createCustomer(customer);
 
-        Customer fetchedCustomer = this.customerRepository.getCustomer(this.customerID);
-        assert fetchedCustomer != null;
-        assert fetchedCustomer.getFirstName().equals("William");
-        assert fetchedCustomer.getLastName().equals("Shakespeare");
+        Customer fetchedCustomer = customerRepository.getCustomer(this.customerID);
+        assertNotNull(fetchedCustomer);
+        assertEquals("William", fetchedCustomer.getFirstName());
+        assertEquals("Shakespeare", fetchedCustomer.getLastName());
     }
 
     @Test
     void updateCustomer() {
         Customer customer = new Customer(this.customerID, "Anna", "Müller", LocalDate.now(), Gender.W);
-        this.customerRepository.createCustomer(customer);
+        customerRepository.createCustomer(customer);
 
         Customer updatedCustomer = new Customer("Anna", "Schmidt", LocalDate.of(1985, 6, 15), Gender.W);
-        this.customerRepository.updateCustomer(this.customerID, updatedCustomer);
+        customerRepository.updateCustomer(this.customerID, updatedCustomer);
 
-        Customer fetchedCustomer = this.customerRepository.getCustomer(this.customerID);
-        assert fetchedCustomer != null;
-        assert fetchedCustomer.getLastName().equals("Schmidt");
-        assert fetchedCustomer.getBirthDate().equals(LocalDate.of(1985, 6, 15));
+        Customer fetchedCustomer = customerRepository.getCustomer(this.customerID);
+        assertNotNull(fetchedCustomer);
+        assertEquals("Schmidt", fetchedCustomer.getLastName());
+        assertEquals(LocalDate.of(1985, 6, 15), fetchedCustomer.getBirthDate());
     }
 
     @Test
     void deleteCustomer() {
         Customer customer = new Customer(this.customerID, "Anna", "Müller", LocalDate.now(), Gender.W);
-        this.customerRepository.createCustomer(customer);
+        customerRepository.createCustomer(customer);
 
-        this.customerRepository.deleteCustomer(this.customerID);
+        customerRepository.deleteCustomer(this.customerID);
 
-        Customer deletedCustomer = this.customerRepository.getCustomer(this.customerID);
-        assert deletedCustomer == null;
+        Customer deletedCustomer = customerRepository.getCustomer(this.customerID);
+        assertNull(deletedCustomer);
     }
 }
