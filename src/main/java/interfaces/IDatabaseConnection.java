@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public interface IDatabaseConnection {
+
     Connection openConnection(Properties properties) throws SQLException;
 
     void createAllTables() throws SQLException;

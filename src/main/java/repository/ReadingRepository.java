@@ -5,18 +5,17 @@ import model.Customer;
 import model.Reading;
 
 import java.sql.*;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class ReadingRepository implements AutoCloseable {
-    protected final DatabaseConnection db_connection;
-    protected final Connection connection;
-    protected final CustomerRepository customerRepository;
+    private final Connection connection;
+    private final CustomerRepository customerRepository;
 
-    public ReadingRepository(Properties properties) throws SQLException {
-        this.db_connection = new DatabaseConnection();
-        this.connection = this.db_connection.openConnection(properties);
-        this.customerRepository = new CustomerRepository(properties);
+    public ReadingRepository() throws SQLException {
+        this.connection = DatabaseConnection.getInstance().getConnection();
+        this.customerRepository = new CustomerRepository();
     }
 
     public UUID createReading(Reading reading) {
@@ -29,7 +28,6 @@ public class ReadingRepository implements AutoCloseable {
             throw new IllegalArgumentException("Customer ID cannot be null for a reading.");
         }
 
-        // Prüfe, ob der Kunde existiert
         Customer customerInDb = customerRepository.getCustomer(customerId);
         if (customerInDb == null) {
             throw new IllegalArgumentException("Customer with ID " + customerId + " does not exist.");
@@ -53,22 +51,14 @@ public class ReadingRepository implements AutoCloseable {
         }
     }
 
-
     public Reading getReading(UUID id) {
         String sql = "SELECT * FROM readings WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setString(1, id.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                String readingIdStr = rs.getString("id");
-                UUID readingId = UUID.fromString(readingIdStr);
-
-                String customerIdStr = rs.getString("customer_id");
-                Customer customer = null;
-                if (customerIdStr != null) {
-                    UUID customerId = UUID.fromString(customerIdStr);
-                    customer = customerRepository.getCustomer(customerId);
-                }
+                UUID customerId = UUID.fromString(rs.getString("customer_id"));
+                Customer customer = customerRepository.getCustomer(customerId);
 
                 Reading reading = new Reading(
                         rs.getBoolean("substitute"),
@@ -79,14 +69,61 @@ public class ReadingRepository implements AutoCloseable {
                         customer,
                         rs.getString("comment")
                 );
-                reading.setid(readingId);
+                reading.setid(id);
                 return reading;
             }
         } catch (SQLException e) {
-            System.err.println("SQL Error in getReading: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error retrieving reading", e);
         }
         return null;
+    }
+
+    public List<Reading> getReadingsByCustomer(UUID customerId) throws SQLException {
+        String sql = "SELECT * FROM readings WHERE customer_id = ?";
+        List<Reading> readings = new ArrayList<>();
+        try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
+            stmt.setString(1, customerId.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Reading reading = new Reading(
+                            rs.getBoolean("substitute"),
+                            rs.getString("meter_id"),
+                            rs.getDouble("meter_count"),
+                            KindOfMeter.valueOf(rs.getString("kind_of_meter")),
+                            rs.getDate("date_of_reading").toLocalDate(),
+                            customerRepository.getCustomer(customerId), // Hole den Kunden
+                            rs.getString("comment")
+                    );
+                    reading.setid(UUID.fromString(rs.getString("id")));
+                    readings.add(reading);
+                }
+            }
+        }
+        return readings;
+    }
+
+    public List<Reading> getAllReadings() throws SQLException {
+        String sql = "SELECT * FROM readings";
+        List<Reading> readings = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                UUID customerId = UUID.fromString(rs.getString("customer_id"));
+                Customer customer = customerRepository.getCustomer(customerId);
+                Reading reading = new Reading(
+                        rs.getBoolean("substitute"),
+                        rs.getString("meter_id"),
+                        rs.getDouble("meter_count"),
+                        KindOfMeter.valueOf(rs.getString("kind_of_meter")),
+                        rs.getDate("date_of_reading").toLocalDate(),
+                        customer,
+                        rs.getString("comment")
+                );
+                reading.setid(UUID.fromString(rs.getString("id")));
+                readings.add(reading);
+            }
+        }
+        return readings;
     }
 
     public void updateReading(UUID id, Reading reading) {
@@ -97,11 +134,6 @@ public class ReadingRepository implements AutoCloseable {
         UUID customerId = reading.getCustomer().getid();
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID cannot be null.");
-        }
-
-        Customer customerInDb = customerRepository.getCustomer(customerId);
-        if (customerInDb == null) {
-            customerRepository.createCustomer(reading.getCustomer());
         }
 
         String sql = "UPDATE readings SET customer_id=?, kind_of_meter=?, meter_count=?, date_of_reading=?, meter_id=?, substitute=?, comment=? WHERE id=?";
@@ -116,8 +148,7 @@ public class ReadingRepository implements AutoCloseable {
             stmt.setString(8, id.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("SQL Error in updateReading: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error updating reading", e);
         }
     }
 
@@ -127,29 +158,12 @@ public class ReadingRepository implements AutoCloseable {
             stmt.setString(1, id.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("SQL Error in deleteReading: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error deleting reading", e);
         }
     }
 
     @Override
-    public void close() throws Exception {
-        this.db_connection.closeConnection();
-    }
-
-    public void deleteReadingById(UUID id) {
-        String sql = "DELETE FROM readings WHERE id = ?";
-        try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setObject(1, id); // Setze die ID als Parameter
-            int rowsAffected = stmt.executeUpdate();
-
-            if (rowsAffected > 0) {
-                System.out.println("Reading mit ID " + id + " wurde erfolgreich gelöscht.");
-            } else {
-                System.out.println("Reading mit ID " + id + " wurde nicht gefunden.");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Fehler beim Löschen des Readings: " + e.getMessage(), e);
-        }
+    public void close() throws SQLException {
+        // Keine spezielle Aktion notwendig, da `DatabaseConnection` Singleton ist
     }
 }

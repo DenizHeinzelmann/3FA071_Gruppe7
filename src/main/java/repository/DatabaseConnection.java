@@ -9,79 +9,149 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseConnection implements IDatabaseConnection {
-    protected Connection connection;
+    private static DatabaseConnection instance;
+    private Connection connection;
+
+    private DatabaseConnection() {
+    }
+
+    public static synchronized DatabaseConnection getInstance() {
+        if (instance == null) {
+            instance = new DatabaseConnection();
+        }
+        return instance;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
 
     @Override
     public Connection openConnection(Properties properties) throws SQLException {
-        String url = properties.getProperty(System.getProperty("user.name") + ".db.url");
-        String user = properties.getProperty(System.getProperty("user.name") + ".db.user");
-        String password = properties.getProperty(System.getProperty("user.name") + ".db.pw");
+        if (connection != null && !connection.isClosed()) {
+            System.out.println("Verbindung bereits geöffnet.");
+            return connection;
+        }
 
-        String baseUrl = url.substring(0, url.lastIndexOf("/"));
-        String dbName = url.substring(url.lastIndexOf("/") + 1);
-        connection = DriverManager.getConnection(baseUrl, user, password);
-        connection.setAutoCommit(true); // Aktiviert Auto-Commit
-        System.out.println("Connected to database server successfully!");
+        // Debugging: Check system user and properties keys
+        System.out.println("Aktueller Benutzer: " + System.getProperty("user.name"));
+        String userName = System.getProperty("user.name");
+        System.out.println("Aktueller Benutzer: " + userName);
+        System.out.println("Properties Keys:");
+        properties.forEach((key, value) -> System.out.println(key + ": " + value));
 
-        this.createDatabase(dbName);
+        String url = properties.getProperty(userName + ".db.url");
+        String user = properties.getProperty(userName + ".db.user");
+        String password = properties.getProperty(userName + ".db.pw");
 
-        connection.setCatalog(dbName);
-        System.out.println("Using database: " + dbName);
+        // Debugging: Check retrieved properties
+        System.out.println("Geladene Properties:");
+        System.out.println("URL: " + url);
+        System.out.println("Benutzer: " + user);
+        System.out.println("Passwort: " + (password != null ? "****" : "Nicht gesetzt"));
 
-        // Erstelle Tabellen nur, wenn sie nicht existieren
-        this.createAllTables();
+        if (url == null || user == null || password == null) {
+            throw new IllegalArgumentException("Fehlende Datenbankverbindungsinformationen in den Properties.");
+        }
+
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            connection.setAutoCommit(true); // Auto-Commit aktivieren
+            System.out.println("Connected to database server successfully!");
+
+            String dbName = url.substring(url.lastIndexOf("/") + 1);
+            System.out.println("Datenbankname: " + dbName);
+
+            createDatabase(dbName);
+            connection.setCatalog(dbName);
+            System.out.println("Using database: " + dbName);
+
+            createAllTables();
+        } catch (SQLException e) {
+            System.err.println("Fehler beim Herstellen der Verbindung: " + e.getMessage());
+            throw e;
+        }
 
         return connection;
     }
 
-
     private void createDatabase(String dbName) throws SQLException {
-        String sqlCreateDatabase = "CREATE DATABASE IF NOT EXISTS " + dbName + " DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+        String sqlCreateDatabase = """
+                CREATE DATABASE IF NOT EXISTS %s
+                DEFAULT CHARACTER SET utf8mb4
+                COLLATE utf8mb4_unicode_ci;
+                """.formatted(dbName);
 
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sqlCreateDatabase);
             System.out.println("Database created or already exists: " + dbName);
+        } catch (SQLException e) {
+            System.err.println("Fehler beim Erstellen der Datenbank: " + e.getMessage());
+            throw e;
         }
     }
 
     @Override
     public void createAllTables() throws SQLException {
-        String sqlCreateCustomers = "CREATE TABLE IF NOT EXISTS customers (" +
-                "id VARCHAR(36) PRIMARY KEY," +
-                "firstname VARCHAR(255)," +
-                "lastname VARCHAR(255)," +
-                "birthdate DATE," +
-                "gender VARCHAR(10)" +
-                ");";
+        String sqlCreateCustomers = """
+                CREATE TABLE IF NOT EXISTS customers (
+                    id CHAR(36) PRIMARY KEY, -- UUID als CHAR(36)
+                    firstname VARCHAR(255),
+                    lastname VARCHAR(255),
+                    birthdate DATE,
+                    gender ENUM('M', 'W', 'D') -- Enums für Geschlechter
+                );
+                """;
 
-        String sqlCreateReadings = "CREATE TABLE IF NOT EXISTS readings (" +
-                "id VARCHAR(36) PRIMARY KEY," +
-                "customer_id VARCHAR(36)," +
-                "kind_of_meter VARCHAR(50)," +
-                "meter_count DECIMAL(10,2)," +
-                "date_of_reading DATE," +
-                "meter_id VARCHAR(255)," +
-                "substitute BOOLEAN," +
-                "comment TEXT," +
-                "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL" +
-                ");";
+        String sqlCreateReadings = """
+                CREATE TABLE IF NOT EXISTS readings (
+                    id CHAR(36) PRIMARY KEY, -- UUID als CHAR(36)
+                    customer_id CHAR(36),
+                    kind_of_meter ENUM('WASSER', 'STROM', 'HEIZUNG'), -- Enums für Zählerarten
+                    meter_count DECIMAL(10,2),
+                    date_of_reading DATE,
+                    meter_id VARCHAR(255),
+                    substitute BOOLEAN,
+                    comment TEXT,
+                    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+                );
+                """;
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlCreateCustomers);
+            System.out.println("Kundentabelle erfolgreich erstellt oder existiert bereits.");
+
             stmt.execute(sqlCreateReadings);
+            System.out.println("Ablesungstabelle erfolgreich erstellt oder existiert bereits.");
+        } catch (SQLException e) {
+            System.err.println("Fehler beim Erstellen der Tabellen: " + e.getMessage());
+            throw e;
         }
     }
 
     @Override
     public void truncateAllTables() throws SQLException {
+        String disableForeignKeyChecks = "SET FOREIGN_KEY_CHECKS = 0;";
+        String enableForeignKeyChecks = "SET FOREIGN_KEY_CHECKS = 1;";
         String sqlTruncateReadings = "TRUNCATE TABLE readings;";
         String sqlTruncateCustomers = "TRUNCATE TABLE customers;";
 
         try (Statement stmt = connection.createStatement()) {
+            stmt.execute(disableForeignKeyChecks); // Disable foreign key checks
+
             stmt.execute(sqlTruncateReadings);
+            System.out.println("Ablesungstabelle erfolgreich geleert.");
+
             stmt.execute(sqlTruncateCustomers);
+            System.out.println("Kundentabelle erfolgreich geleert.");
+
+            stmt.execute(enableForeignKeyChecks); // Re-enable foreign key checks
+        } catch (SQLException e) {
+            System.err.println("Fehler beim Leeren der Tabellen: " + e.getMessage());
+            throw e;
         }
     }
+
 
     @Override
     public void removeAllTables() throws SQLException {
@@ -90,7 +160,13 @@ public class DatabaseConnection implements IDatabaseConnection {
 
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sqlDropReadings);
+            System.out.println("Ablesungstabelle erfolgreich entfernt.");
+
             stmt.execute(sqlDropCustomers);
+            System.out.println("Kundentabelle erfolgreich entfernt.");
+        } catch (SQLException e) {
+            System.err.println("Fehler beim Entfernen der Tabellen: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -98,7 +174,9 @@ public class DatabaseConnection implements IDatabaseConnection {
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
-            System.out.println("Datenbankverbindung geschlossen.");
+            System.out.println("Datenbankverbindung erfolgreich geschlossen.");
+        } else {
+            System.out.println("Datenbankverbindung war bereits geschlossen.");
         }
     }
 }
