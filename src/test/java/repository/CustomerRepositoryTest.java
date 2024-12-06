@@ -5,8 +5,12 @@ import model.Customer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Properties;
 import java.util.UUID;
 
 class CustomerRepositoryTest {
@@ -15,36 +19,44 @@ class CustomerRepositoryTest {
     private UUID customerID = UUID.randomUUID();
 
     @BeforeEach
-    void setUp() throws SQLException {
-        System.getProperties().setProperty("Service.db.url", "jdbc:mariadb://localhost:3306/hausfix_db");
-        System.getProperties().setProperty("Service.db.user", "root");
-        System.getProperties().setProperty("Service.db.pw", "hausverwaltung");
+    void setUp() throws SQLException, IOException {
+        // Load properties from the database.properties file
+        Properties properties = new Properties();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("database.properties")) {
+            if (input == null) {
+                throw new FileNotFoundException("'database.properties' not found!");
+            }
+            properties.load(input);
+        }
 
-        DatabaseConnection.getInstance().openConnection(System.getProperties());
+        // Open the database connection
+        DatabaseConnection.getInstance().openConnection(properties);
+
+        // Initialize the repository
         this.customerRepository = new CustomerRepository();
     }
 
 
     @Test
     void createCustomer() {
-        Customer customer = new Customer(this.customerID, "Hans", "Müller", LocalDate.now(), Gender.M);
+        Customer customer = new Customer(this.customerID, "Deniz", "Heinzelmann", LocalDate.now(), Gender.M);
         this.customerRepository.createCustomer(customer);
 
         Customer fetchedCustomer = this.customerRepository.getCustomer(this.customerID);
         assert fetchedCustomer != null;
-        assert fetchedCustomer.getFirstName().equals("Hans");
-        assert fetchedCustomer.getLastName().equals("Müller");
+        assert fetchedCustomer.getFirstName().equals("Deniz");
+        assert fetchedCustomer.getLastName().equals("Heinzelmann");
     }
 
     @Test
     void getCustomer() {
-        Customer customer = new Customer(this.customerID, "Anna", "Müller", LocalDate.now(), Gender.W);
+        Customer customer = new Customer(this.customerID, "William", "Shakespeare", LocalDate.now(), Gender.M);
         this.customerRepository.createCustomer(customer);
 
         Customer fetchedCustomer = this.customerRepository.getCustomer(this.customerID);
         assert fetchedCustomer != null;
-        assert fetchedCustomer.getFirstName().equals("Anna");
-        assert fetchedCustomer.getLastName().equals("Müller");
+        assert fetchedCustomer.getFirstName().equals("William");
+        assert fetchedCustomer.getLastName().equals("Shakespeare");
     }
 
     @Test

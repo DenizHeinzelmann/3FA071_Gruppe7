@@ -23,21 +23,18 @@ class ReadingRepositoryTest {
 
     @BeforeEach
     void setUp() throws SQLException, IOException {
-        // Lade die Properties aus einer Datei
         Properties properties = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("database.properties")) {
             if (input == null) {
-                throw new FileNotFoundException("Die Datei 'database.properties' wurde nicht gefunden!");
+                throw new FileNotFoundException("'database.properties' not found!");
             }
             properties.load(input);
         }
 
-        // Verbindung öffnen
         DatabaseConnection.getInstance().openConnection(properties);
         this.customerRepository = new CustomerRepository();
         this.readingRepository = new ReadingRepository();
 
-        // Gemeinsamen Kunden erstellen
         Customer customer = new Customer(UUID.randomUUID(), "Shared", "Customer", LocalDate.of(1990, 1, 1), Gender.M);
         this.customerID = this.customerRepository.createCustomer(customer);
     }
