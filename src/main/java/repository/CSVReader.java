@@ -5,15 +5,13 @@ import enums.KindOfMeter;
 import model.Customer;
 import model.Reading;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.UUID;
 
 public class CSVReader {
@@ -21,23 +19,28 @@ public class CSVReader {
     private final CustomerRepository customerRepository;
     private final ReadingRepository readingRepository;
 
-    public CSVReader(Properties properties) throws Exception {
-        this.customerRepository = new CustomerRepository(properties);
-        this.readingRepository = new ReadingRepository(properties);
+    public CSVReader() throws Exception {
+        DatabaseConnection.getInstance().openConnection(System.getProperties());
+        this.customerRepository = new CustomerRepository();
+        this.readingRepository = new ReadingRepository();
     }
 
     public void importDataFromCSV() throws IOException {
-        System.out.println("Beginne mit dem Import der Daten...");
+        System.out.println("Starting Data-Import...");
         List<Customer> customers = importCustomersFromFile("data/customer.csv");
         importReadingsFromFile("data/water.csv", customers, KindOfMeter.WASSER);
-        System.out.println("Datenimport abgeschlossen.");
+        importReadingsFromFile("data/electricity.csv", customers, KindOfMeter.STROM);
+        importReadingsFromFile("data/heating.csv", customers, KindOfMeter.HEIZUNG);
+        System.out.println("Data-Import completed.");
     }
-    private List<Customer> importCustomersFromFile(String fileName) throws IOException {
+
+    public List<Customer> importCustomersFromFile(String fileName) throws IOException {
         List<Customer> customers = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
                         Objects.requireNonNull(
-                                getClass().getClassLoader().getResourceAsStream(fileName)
+                                getClass().getClassLoader().getResourceAsStream(fileName),
+                                "File not found: " + fileName
                         )
                 ))) {
             String line;
@@ -45,64 +48,119 @@ public class CSVReader {
 
             while ((line = reader.readLine()) != null) {
                 if (isHeader) {
-                    isHeader = false; // Überspringe die erste Zeile (Header)
+                    isHeader = false; // Skip the header line
                     continue;
                 }
 
                 String[] fields = line.split(",");
-                if (fields.length < 4) continue;
+                if (fields.length < 4) {
+                    throw new IOException("Invalid line in customer file: " + line);
+                }
 
-                UUID id = UUID.fromString(fields[0]);
-                Gender gender = fields[1].equalsIgnoreCase("herr") ? Gender.M : Gender.W;
-                String firstName = fields[2];
-                String lastName = fields[3];
-                LocalDate birthDate = fields.length > 4 && !fields[4].isEmpty()
-                        ? LocalDate.parse(fields[4], DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                        : null;
+                try {
+                    UUID id = UUID.fromString(fields[0]);
+                    Gender gender = parseGender(fields[1]);
+                    String firstName = fields[2];
+                    String lastName = fields[3];
+                    LocalDate birthDate = parseDate(fields.length > 4 ? fields[4] : null);
 
-                Customer customer = new Customer(id, firstName, lastName, birthDate, gender);
-                customerRepository.createCustomer(customer);
-                customers.add(customer);
-                System.out.println("Kunde gespeichert: " + customer.getid());
+                    Customer customer = new Customer(id, firstName, lastName, birthDate, gender);
+                    customerRepository.createCustomer(customer);
+                    customers.add(customer);
+                    System.out.println("Customer saved: " + customer.getid());
+                } catch (IllegalArgumentException | DateTimeParseException e) {
+                    throw new IOException("Error processing line: " + line + " - " + e.getMessage(), e);
+                }
             }
         }
         return customers;
     }
 
+    public void importReadingsFromFile(String fileName, List<Customer> customers, KindOfMeter kindOfMeter) throws IOException {
+        BufferedReader reader;
 
-    private void importReadingsFromFile(String fileName, List<Customer> customers, KindOfMeter kindOfMeter) throws IOException {
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                        Objects.requireNonNull(
-                                getClass().getClassLoader().getResourceAsStream(fileName)
-                        )
-                ))) {
+        if (fileName.startsWith("/") || fileName.contains(":")) {
+            reader = new BufferedReader(new FileReader(fileName));
+        } else {
+            InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(fileName);
+            if (resourceStream == null) {
+                throw new FileNotFoundException("File not found: " + fileName);
+            }
+            reader = new BufferedReader(new InputStreamReader(resourceStream));
+        }
+
+        try (reader) {
             String line;
             String customerUid = null;
             String meterId = null;
 
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("\"Kunde\"")) {
-                    customerUid = line.split(";")[1].replace("\"", "").trim();
+                    customerUid = extractField(line, 1);
                 } else if (line.startsWith("\"Zählernummer\"")) {
-                    meterId = line.split(";")[1].replace("\"", "").trim();
+                    meterId = extractField(line, 1);
                 } else if (line.matches("^\\d{2}\\.\\d{2}\\.\\d{4}.*")) {
                     String[] fields = line.split(";");
-                    LocalDate date = LocalDate.parse(fields[0], DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-                    Double meterCount = fields[1].isEmpty() ? null : Double.parseDouble(fields[1].replace(",", "."));
-                    String comment = fields.length > 2 ? fields[2] : null;
+                    try {
+                        LocalDate date = parseDate(fields[0]);
+                        Double meterCount = parseDouble(fields[1]);
+                        String comment = fields.length > 2 ? fields[2] : null;
 
-                    UUID customerId = UUID.fromString(customerUid);
-                    Customer customer = customerRepository.getCustomer(customerId);
-                    if (customer == null) {
-                        System.err.println("Kunde mit UUID " + customerUid + " nicht gefunden.");
-                        continue;
+                        if (customerUid == null || customerUid.isEmpty()) {
+                            throw new IOException("Customer UUID is missing or invalid in file: " + fileName);
+                        }
+                        if (meterId == null || meterId.isEmpty()) {
+                            throw new IOException("Meter ID is missing or invalid in file: " + fileName);
+                        }
+
+                        UUID customerId = UUID.fromString(customerUid);
+                        Customer customer = customers.stream()
+                                .filter(c -> c.getid().equals(customerId))
+                                .findFirst()
+                                .orElse(null);
+
+                        if (customer == null) {
+                            throw new IOException("No customer with UUID " + customerUid + " found in the provided customers list.");
+                        }
+
+                        Reading reading = new Reading(UUID.randomUUID(), false, meterId, meterCount, kindOfMeter, date, customer, comment);
+                        readingRepository.createReading(reading);
+                    } catch (IllegalArgumentException e) {
+                        throw new IOException("Error processing line: " + line + " - " + e.getMessage(), e);
                     }
-
-                    Reading reading = new Reading(UUID.randomUUID(), false, meterId, meterCount, kindOfMeter, date, customer, comment);
-                    readingRepository.createReading(reading);
                 }
             }
         }
+    }
+
+    private Gender parseGender(String genderStr) {
+        return switch (genderStr.toLowerCase()) {
+            case "herr" -> Gender.M;
+            case "frau" -> Gender.W;
+            case "divers" -> Gender.D;
+            default -> null;
+        };
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    }
+
+    private Double parseDouble(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        return Double.parseDouble(value.replace(",", "."));
+    }
+
+    private String extractField(String line, int index) {
+        String[] parts = line.split(";");
+        if (index >= parts.length) {
+            throw new IllegalArgumentException("Invalid index for line: " + line);
+        }
+        return parts[index].replace("\"", "").trim();
     }
 }

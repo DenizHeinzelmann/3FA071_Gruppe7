@@ -4,16 +4,15 @@ import enums.Gender;
 import model.Customer;
 
 import java.sql.*;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class CustomerRepository implements AutoCloseable {
-    private final DatabaseConnection db_connection;
     private final Connection connection;
 
-    public CustomerRepository(Properties properties) throws SQLException {
-        this.db_connection = new DatabaseConnection();
-        this.connection = this.db_connection.openConnection(properties);
+    public CustomerRepository() throws SQLException {
+        this.connection = DatabaseConnection.getInstance().getConnection();
     }
 
     public UUID createCustomer(Customer customer) {
@@ -27,14 +26,12 @@ public class CustomerRepository implements AutoCloseable {
             stmt.setString(2, customer.getFirstName());
             stmt.setString(3, customer.getLastName());
 
-            // Überprüfen, ob birthdate null ist
             if (customer.getBirthDate() != null) {
                 stmt.setDate(4, Date.valueOf(customer.getBirthDate()));
             } else {
                 stmt.setNull(4, Types.DATE);
             }
 
-            // Überprüfen, ob gender null ist
             if (customer.getGender() != null) {
                 stmt.setString(5, customer.getGender().name());
             } else {
@@ -67,6 +64,24 @@ public class CustomerRepository implements AutoCloseable {
         }
         return null;
     }
+    public List<Customer> getAllCustomers() throws SQLException {
+        String sql = "SELECT * FROM customers";
+        List<Customer> customers = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                Customer customer = new Customer(
+                        UUID.fromString(rs.getString("id")),
+                        rs.getString("firstname"),
+                        rs.getString("lastname"),
+                        rs.getDate("birthdate") != null ? rs.getDate("birthdate").toLocalDate() : null,
+                        rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null
+                );
+                customers.add(customer);
+            }
+        }
+        return customers;
+    }
 
     public void updateCustomer(UUID id, Customer customer) {
         String sql = "UPDATE customers SET firstname=?, lastname=?, birthdate=?, gender=? WHERE id=?";
@@ -74,14 +89,12 @@ public class CustomerRepository implements AutoCloseable {
             stmt.setString(1, customer.getFirstName());
             stmt.setString(2, customer.getLastName());
 
-            // Überprüfen, ob birthdate null ist
             if (customer.getBirthDate() != null) {
                 stmt.setDate(3, Date.valueOf(customer.getBirthDate()));
             } else {
                 stmt.setNull(3, Types.DATE);
             }
 
-            // Überprüfen, ob gender null ist
             if (customer.getGender() != null) {
                 stmt.setString(4, customer.getGender().name());
             } else {
@@ -107,9 +120,6 @@ public class CustomerRepository implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-            db_connection.closeConnection();
-        }
+        // Keine spezielle Aktion notwendig, da `DatabaseConnection` Singleton ist
     }
 }
