@@ -150,7 +150,6 @@ public class DatabaseConnection implements IDatabaseConnection {
         }
     }
 
-
     @Override
     public void removeAllTables() throws SQLException {
         String sqlDropReadings = "DROP TABLE IF EXISTS readings;";
