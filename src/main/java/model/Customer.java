@@ -13,6 +13,7 @@ public class Customer implements ICustomer {
     private Gender gender;
     private UUID uid;
 
+    public Customer() {}
 
     public Customer(String firstname, String lastname, LocalDate birthdate, Gender gender) {
         this.lastname = lastname;
@@ -70,12 +71,12 @@ public class Customer implements ICustomer {
     }
 
     @Override
-    public UUID getid() {
+    public UUID getid() { // Nicht konform
         return this.uid;
     }
 
     @Override
-    public void setid(UUID id) {
+    public void setid(UUID id) { // Nicht konform
         this.uid = id;
     }
 }

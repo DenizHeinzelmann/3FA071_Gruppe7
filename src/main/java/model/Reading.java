@@ -8,6 +8,9 @@ import java.util.UUID;
 
 public class Reading implements IReading {
 
+    public Reading(){
+
+    }
     private String comment;
     private Customer customer;
     private LocalDate dateOfReading;
