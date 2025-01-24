@@ -77,6 +77,7 @@ public class CustomerRepository implements AutoCloseable {
                         rs.getDate("birthdate") != null ? rs.getDate("birthdate").toLocalDate() : null,
                         rs.getString("gender") != null ? Gender.valueOf(rs.getString("gender")) : null
                 );
+
                 customers.add(customer);
             }
         }

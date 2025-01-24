@@ -9,7 +9,7 @@ import utils.SchemaValidator;
 
 import java.util.UUID;
 
-@Path("/readings")
+@Path("/api/readings")
 public class ReadingResource {
     @GET
     @Path("/{id}")
