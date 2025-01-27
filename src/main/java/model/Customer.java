@@ -1,5 +1,6 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import enums.Gender;
 import interfaces.ICustomer;
 
@@ -7,13 +8,17 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public class Customer implements ICustomer {
+    @JsonProperty(required = true)
     private String lastname;
+    @JsonProperty(required = true)
     private String firstName;
     private LocalDate birthdate;
+    @JsonProperty(required = true)
     private Gender gender;
-    private UUID uid;
+    private UUID id;
 
-    public Customer() {}
+    public Customer() {
+    }
 
     public Customer(String firstname, String lastname, LocalDate birthdate, Gender gender) {
         this.lastname = lastname;
@@ -23,7 +28,7 @@ public class Customer implements ICustomer {
     }
 
     public Customer(UUID uid, String firstname, String lastname, LocalDate birthdate, Gender gender) {
-        this.uid = uid;
+        this.id = uid;
         this.lastname = lastname;
         this.firstName = firstname;
         this.birthdate = birthdate;
@@ -72,11 +77,11 @@ public class Customer implements ICustomer {
 
     @Override
     public UUID getid() { // Nicht konform
-        return this.uid;
+        return this.id;
     }
 
     @Override
     public void setid(UUID id) { // Nicht konform
-        this.uid = id;
+        this.id = id;
     }
 }

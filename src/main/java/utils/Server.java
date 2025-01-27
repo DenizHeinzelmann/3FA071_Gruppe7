@@ -3,6 +3,7 @@
 package utils;
 
 import controller.CustomerHandler;
+import controller.DBHandler;
 import controller.ReadingHandler;
 import repository.CustomerRepository;
 import repository.DatabaseConnection;
@@ -65,6 +66,7 @@ public class Server {
             // Erstelle Kontexte für REST-Endpunkte
             server.createContext("/api/customers", new CustomerHandler(customerRepository));
             server.createContext("/api/readings", new ReadingHandler(readingRepository, customerRepository));
+            server.createContext("/api/setupDB", new DBHandler());
 
             server.setExecutor(null); // Default-Executor
             server.start();

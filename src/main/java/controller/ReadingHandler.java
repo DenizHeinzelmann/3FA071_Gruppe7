@@ -11,7 +11,10 @@ import utils.JsonUtil;
 
 import java.io.*;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class ReadingHandler implements HttpHandler {
@@ -30,6 +33,7 @@ public class ReadingHandler implements HttpHandler {
             URI uri = exchange.getRequestURI();
             String path = uri.getPath();
             String[] pathParts = path.split("/");
+
 
             if (method.equalsIgnoreCase("GET")) {
                 if (pathParts.length == 4) { // /api/readings/{id}
@@ -81,9 +85,24 @@ public class ReadingHandler implements HttpHandler {
 
     private void handleGetAllReadings(HttpExchange exchange) throws IOException {
         try {
-            List<Reading> readings = readingRepository.getAllReadings();
-            String response = JsonUtil.toJson(readings);
-            sendResponse(exchange, 200, response);
+
+            String query = exchange.getRequestURI().getQuery();
+            if (query != null) {
+                Map<String,String> queryParameters = new LinkedHashMap<String, String>();
+                String [] queryList = query.split("&");
+                for (String pair : queryList) {
+                    int idx = pair.indexOf("=");
+                    queryParameters.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+                }
+                List<Reading> readings = readingRepository.getAllReadingsInRange(queryParameters.get("start"),queryParameters.get("end"), queryParameters.get("kindOfMeter"));
+                String response = JsonUtil.toJson(readings);
+                sendResponse(exchange, 200, response);
+            }
+            else {
+                List<Reading> readings = readingRepository.getAllReadings();
+                String response = JsonUtil.toJson(readings);
+                sendResponse(exchange, 200, response);
+            }
         } catch (Exception e) {
             sendResponse(exchange, 500, "Error retrieving readings");
         }
