@@ -40,7 +40,8 @@ public class CustomerHandler implements HttpHandler {
                 if (pathParts.length == 4) { // /api/customers/{id}
                     handleUpdateCustomer(exchange, pathParts[3]);
                 } else {
-                    sendResponse(exchange, 400, "Invalid URL for PUT");
+                    handleUpdateCustomer(exchange);
+                    //sendResponse(exchange, 400, "Invalid URL for PUT");
                 }
             } else if (method.equalsIgnoreCase("DELETE")) {
                 if (pathParts.length == 4) { // /api/customers/{id}
@@ -91,6 +92,9 @@ public class CustomerHandler implements HttpHandler {
                 .reduce("", (acc, line) -> acc + line);
         try {
             Customer customer = JsonUtil.fromJson(body, Customer.class);
+            if (customer.getFirstName() == null || customer.getLastName() == null || customer.getGender() == null) {
+                sendResponse(exchange, 404, "required field is missing. You need to have firstName, lastName and gender");
+            }
             UUID id = customerRepository.createCustomer(customer);
             customer.setid(id); // Verwendung von setid()
             String response = JsonUtil.toJson(customer);
@@ -101,6 +105,27 @@ public class CustomerHandler implements HttpHandler {
         }
     }
 
+    private void handleUpdateCustomer(HttpExchange exchange) throws IOException {
+        try {
+            InputStream is = exchange.getRequestBody();
+            String body = new BufferedReader(new InputStreamReader(is))
+                    .lines()
+                    .reduce("", (acc, line) -> acc + line);
+            Customer customer = JsonUtil.fromJson(body, Customer.class);
+            if(customer.getid() == null){
+                customerRepository.createCustomer(customer);
+                sendResponse(exchange, 200, "Customer created successfully");
+            }else {
+                customerRepository.updateCustomer(customer.getid(), customer);
+                sendResponse(exchange, 200, "Customer updated successfully");
+            }
+        } catch (IllegalArgumentException e) {
+            sendResponse(exchange, 400, "Invalid UUID format");
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendResponse(exchange, 400, "Invalid JSON format or data: " + e.getMessage());
+        }
+    }
     private void handleUpdateCustomer(HttpExchange exchange, String idStr) throws IOException {
         try {
             UUID id = UUID.fromString(idStr);

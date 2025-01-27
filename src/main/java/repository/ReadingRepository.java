@@ -5,6 +5,7 @@ import model.Customer;
 import model.Reading;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -124,6 +125,45 @@ public class ReadingRepository implements AutoCloseable {
             }
         }
         return readings;
+    }
+
+    public List<Reading> getAllReadingsInRange(String start, String end, String kindOfMeter) {
+        List<Reading> readings = new ArrayList<>();
+        String sql = "Select * from readings Where (date_of_reading >= ? AND date_of_reading <= ?);";
+
+        if (kindOfMeter != null) {
+            sql = "SELECT * FROM readings WHERE (date_of_reading >= ? AND date_of_reading <= ?) AND kind_of_meter = ?;";
+        }
+
+        try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(start));
+            stmt.setDate(2, Date.valueOf(end));
+            if (kindOfMeter != null) {
+                stmt.setString(3, kindOfMeter);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    UUID customerId = UUID.fromString(rs.getString("customer_id"));
+                    Customer customer = customerRepository.getCustomer(customerId);
+                    Reading reading = new Reading(
+                            rs.getBoolean("substitute"),
+                            rs.getString("meter_id"),
+                            rs.getDouble("meter_count"),
+                            KindOfMeter.valueOf(rs.getString("kind_of_meter")),
+                            rs.getDate("date_of_reading").toLocalDate(),
+                            customer,
+                            rs.getString("comment")
+                    );
+                    reading.setid(UUID.fromString(rs.getString("id")));
+                    readings.add(reading);
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return readings;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void updateReading(UUID id, Reading reading) {
