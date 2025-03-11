@@ -1,5 +1,4 @@
 // src/main/java/controller/CustomerHandler.java
-
 package controller;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -22,12 +21,19 @@ public class CustomerHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        try {
-            String method = exchange.getRequestMethod();
-            URI uri = exchange.getRequestURI();
-            String path = uri.getPath();
-            String[] pathParts = path.split("/");
+        // Setze CORS-Header
+        String method = exchange.getRequestMethod();
+        URI uri = exchange.getRequestURI();
+        String path = uri.getPath();
+        String[] pathParts = path.split("/");
 
+        // Behandle OPTIONS-Anfragen für CORS
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            exchange.sendResponseHeaders(204, -1); // No Content
+            return;
+        }
+
+        try {
             if (method.equalsIgnoreCase("GET")) {
                 if (pathParts.length == 4) { // /api/customers/{id}
                     handleGetCustomer(exchange, pathParts[3]);
@@ -92,7 +98,7 @@ public class CustomerHandler implements HttpHandler {
         try {
             Customer customer = JsonUtil.fromJson(body, Customer.class);
             UUID id = customerRepository.createCustomer(customer);
-            customer.setid(id); // Verwendung von setid()
+            customer.setid(id); // Stelle sicher, dass die Methode korrekt ist
             String response = JsonUtil.toJson(customer);
             sendResponse(exchange, 201, response);
         } catch (Exception e) {

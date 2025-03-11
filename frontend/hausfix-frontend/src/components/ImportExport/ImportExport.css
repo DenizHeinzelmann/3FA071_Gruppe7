@@ -1,0 +1,15 @@
+
+.import-export-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.import-export-container h2 {
+  margin-bottom: 20px;
+}
+
+.import-export-container button {
+  margin: 10px;
+}

@@ -5,11 +5,15 @@ import interfaces.ICustomer;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Customer implements ICustomer {
     private String lastname;
     private String firstName;
+
+    @JsonProperty("birthdate")
     private LocalDate birthdate;
+
     private Gender gender;
     private UUID uid;
 
@@ -71,12 +75,12 @@ public class Customer implements ICustomer {
     }
 
     @Override
-    public UUID getid() { // Nicht konform
+    public UUID getid() {
         return this.uid;
     }
 
     @Override
-    public void setid(UUID id) { // Nicht konform
+    public void setid(UUID id) {
         this.uid = id;
     }
 }

@@ -18,6 +18,8 @@ public class ReadingRepository implements AutoCloseable {
         this.customerRepository = new CustomerRepository();
     }
 
+    // To change!!! reading doesnt need customer? UUID random even if no customer? or how..
+
     public UUID createReading(Reading reading) {
         if (reading.getCustomer() == null) {
             throw new IllegalArgumentException("Reading must have a customer.");
@@ -73,7 +75,7 @@ public class ReadingRepository implements AutoCloseable {
                 return reading;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error retrieving reading", e);
+            throw new RuntimeException("Error retrieving reading (RepositoryClass)", e);
         }
         return null;
     }
