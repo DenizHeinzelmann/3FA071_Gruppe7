@@ -9,6 +9,8 @@ import ReadingList from './components/Readings/ReadingList';
 import ReadingForm from './components/Readings/ReadingForm';
 import ReadingDetail from './components/Readings/ReadingDetail';
 import ImportExport from './components/ImportExport/ImportExport';
+import Login from './components/Auth/Login';
+import PrivateRoute from './components/Auth/PrivateRoute';
 
 function App() {
   return (
@@ -19,20 +21,58 @@ function App() {
         <Container maxWidth="lg">
           <Routes>
             <Route path="/" element={<Navigate to="/customers" replace />} />
+            <Route path="/login" element={<Login />} />
 
-            <Route path="/customers" element={<CustomerList />} />
-            <Route path="/customers/new" element={<CustomerForm />} />
-            <Route path="/customers/:id/edit" element={<CustomerForm />} />
-            <Route path="/customers/:id" element={<CustomerDetail />} />
+            {/* Geschützte Routen */}
+            <Route path="/customers" element={
+              <PrivateRoute>
+                <CustomerList />
+              </PrivateRoute>
+            } />
+            <Route path="/customers/new" element={
+              <PrivateRoute>
+                <CustomerForm />
+              </PrivateRoute>
+            } />
+            <Route path="/customers/:id/edit" element={
+              <PrivateRoute>
+                <CustomerForm />
+              </PrivateRoute>
+            } />
+            <Route path="/customers/:id" element={
+              <PrivateRoute>
+                <CustomerDetail />
+              </PrivateRoute>
+            } />
 
-            <Route path="/readings" element={<ReadingList />} />
-            <Route path="/readings/new" element={<ReadingForm />} />
-            <Route path="/readings/:id/edit" element={<ReadingForm />} />
-            <Route path="/readings/:id" element={<ReadingDetail />} />
+            <Route path="/readings" element={
+              <PrivateRoute>
+                <ReadingList />
+              </PrivateRoute>
+            } />
+            <Route path="/readings/new" element={
+              <PrivateRoute>
+                <ReadingForm />
+              </PrivateRoute>
+            } />
+            <Route path="/readings/:id/edit" element={
+              <PrivateRoute>
+                <ReadingForm />
+              </PrivateRoute>
+            } />
+            <Route path="/readings/:id" element={
+              <PrivateRoute>
+                <ReadingDetail />
+              </PrivateRoute>
+            } />
 
-            <Route path="/import-export" element={<ImportExport />} />
+            <Route path="/import-export" element={
+              <PrivateRoute>
+                <ImportExport />
+              </PrivateRoute>
+            } />
 
-            {/* Wenn Pfad net definiert --> */}
+            {/* Fallback-Route */}
             <Route path="*" element={<Typography variant="h4">404 - Seite nicht gefunden</Typography>} />
           </Routes>
         </Container>

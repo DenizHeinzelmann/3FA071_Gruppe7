@@ -2,12 +2,15 @@
 package utils;
 
 import controller.CustomerHandler;
+import controller.LoginHandler;
 import controller.ReadingHandler;
+import controller.RegisterHandler;
 import filter.CorsFilter;
 import repository.CustomerRepository;
 import repository.DatabaseConnection;
 import repository.ReadingRepository;
 import com.sun.net.httpserver.HttpServer;
+import repository.UserRepository;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -45,14 +48,20 @@ public class Server {
 
         server = HttpServer.create(new InetSocketAddress(host, port), 0);
 
+// ...
         try {
             DatabaseConnection.getInstance().openConnection(properties);
             CustomerRepository customerRepository = new CustomerRepository();
             ReadingRepository readingRepository = new ReadingRepository();
+            UserRepository userRepository = new UserRepository(); // Neu
 
-            // Wende den CorsFilter auf alle Handler an
+            // Bestehende Endpunkte
             server.createContext("/api/customers", new CorsFilter(new CustomerHandler(customerRepository)));
             server.createContext("/api/readings", new CorsFilter(new ReadingHandler(readingRepository, customerRepository)));
+
+            // Neue Endpunkte für Userverwaltung
+            server.createContext("/api/users/login", new CorsFilter(new LoginHandler(userRepository)));
+            server.createContext("/api/users/register", new CorsFilter(new RegisterHandler(userRepository)));
 
             server.setExecutor(null); // Default-Executor
             server.start();
@@ -62,6 +71,7 @@ public class Server {
             server.stop(0);
             throw new IOException("Server konnte nicht gestartet werden aufgrund eines Datenbankfehlers.", e);
         }
+
     }
 
     public static void stopServer() {
