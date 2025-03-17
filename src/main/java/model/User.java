@@ -8,7 +8,9 @@ public class User {
     private UUID id;
     private String username;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)    private String password;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
     private String role;
 
     public User() {

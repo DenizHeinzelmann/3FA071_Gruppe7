@@ -18,28 +18,18 @@ public class ReadingRepository implements AutoCloseable {
         this.customerRepository = new CustomerRepository();
     }
 
-    // To change!!! reading doesnt need customer? UUID random even if no customer? or how..
-
+    // Ermöglicht das Anlegen eines Readings auch ohne zugeordneten Customer.
     public UUID createReading(Reading reading) {
-        if (reading.getCustomer() == null) {
-            throw new IllegalArgumentException("Reading must have a customer.");
-        }
-
-        UUID customerId = reading.getCustomer().getid();
-        if (customerId == null) {
-            throw new IllegalArgumentException("Customer ID cannot be null for a reading.");
-        }
-
-        Customer customerInDb = customerRepository.getCustomer(customerId);
-        if (customerInDb == null) {
-            throw new IllegalArgumentException("Customer with ID " + customerId + " does not exist.");
-        }
-
         String sql = "INSERT INTO readings (id, customer_id, kind_of_meter, meter_count, date_of_reading, meter_id, substitute, comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         UUID id = UUID.randomUUID();
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setString(1, id.toString());
-            stmt.setString(2, customerId.toString());
+            // Falls ein Customer vorhanden ist, setze dessen ID, ansonsten NULL
+            if (reading.getCustomer() != null && reading.getCustomer().getid() != null) {
+                stmt.setString(2, reading.getCustomer().getid().toString());
+            } else {
+                stmt.setNull(2, Types.CHAR);
+            }
             stmt.setString(3, reading.getKindOfMeter().name());
             stmt.setDouble(4, reading.getMeterCount());
             stmt.setDate(5, Date.valueOf(reading.getDateOfReading()));
@@ -59,9 +49,11 @@ public class ReadingRepository implements AutoCloseable {
             stmt.setString(1, id.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                UUID customerId = UUID.fromString(rs.getString("customer_id"));
-                Customer customer = customerRepository.getCustomer(customerId);
-
+                String customerIdStr = rs.getString("customer_id");
+                Customer customer = null;
+                if (customerIdStr != null && !customerIdStr.isEmpty()) {
+                    customer = customerRepository.getCustomer(UUID.fromString(customerIdStr));
+                }
                 Reading reading = new Reading(
                         rs.getBoolean("substitute"),
                         rs.getString("meter_id"),
@@ -93,7 +85,7 @@ public class ReadingRepository implements AutoCloseable {
                             rs.getDouble("meter_count"),
                             KindOfMeter.valueOf(rs.getString("kind_of_meter")),
                             rs.getDate("date_of_reading").toLocalDate(),
-                            customerRepository.getCustomer(customerId), // Hole den Kunden
+                            customerRepository.getCustomer(customerId),
                             rs.getString("comment")
                     );
                     reading.setid(UUID.fromString(rs.getString("id")));
@@ -110,8 +102,11 @@ public class ReadingRepository implements AutoCloseable {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                UUID customerId = UUID.fromString(rs.getString("customer_id"));
-                Customer customer = customerRepository.getCustomer(customerId);
+                String customerIdStr = rs.getString("customer_id");
+                Customer customer = null;
+                if (customerIdStr != null && !customerIdStr.isEmpty()) {
+                    customer = customerRepository.getCustomer(UUID.fromString(customerIdStr));
+                }
                 Reading reading = new Reading(
                         rs.getBoolean("substitute"),
                         rs.getString("meter_id"),
@@ -128,19 +123,15 @@ public class ReadingRepository implements AutoCloseable {
         return readings;
     }
 
+    // Erlaubt auch ein Update ohne zugeordneten Customer (setzt customer_id auf NULL, wenn kein Customer vorhanden)
     public void updateReading(UUID id, Reading reading) {
-        if (reading.getCustomer() == null) {
-            throw new IllegalArgumentException("Reading must have a customer.");
-        }
-
-        UUID customerId = reading.getCustomer().getid();
-        if (customerId == null) {
-            throw new IllegalArgumentException("Customer ID cannot be null.");
-        }
-
         String sql = "UPDATE readings SET customer_id=?, kind_of_meter=?, meter_count=?, date_of_reading=?, meter_id=?, substitute=?, comment=? WHERE id=?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
-            stmt.setString(1, customerId.toString());
+            if (reading.getCustomer() != null && reading.getCustomer().getid() != null) {
+                stmt.setString(1, reading.getCustomer().getid().toString());
+            } else {
+                stmt.setNull(1, Types.CHAR);
+            }
             stmt.setString(2, reading.getKindOfMeter().name());
             stmt.setDouble(3, reading.getMeterCount());
             stmt.setDate(4, Date.valueOf(reading.getDateOfReading()));
@@ -166,5 +157,6 @@ public class ReadingRepository implements AutoCloseable {
 
     @Override
     public void close() throws SQLException {
+        // Hier können Sie ggf. die Connection schließen, falls gewünscht.
     }
 }
