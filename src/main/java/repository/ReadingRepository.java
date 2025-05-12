@@ -1,6 +1,7 @@
 package repository;
 
 import enums.KindOfMeter;
+import model.AnalysisData;
 import model.Customer;
 import model.Reading;
 
@@ -17,6 +18,42 @@ public class ReadingRepository implements AutoCloseable {
         this.connection = DatabaseConnection.getInstance().getConnection();
         this.customerRepository = new CustomerRepository();
     }
+
+        public List<AnalysisData> getAnalysisData(int periodYears) {
+            List<AnalysisData> analysisList = new ArrayList<>();
+            String sql;
+            // Bei 1 Jahr gruppiere nach Monat (YYYY-MM), ansonsten nach Jahr (YYYY)
+            if (periodYears == 1) {
+                sql = "SELECT kind_of_meter, DATE_FORMAT(date_of_reading, '%Y-%m') AS periodLabel, AVG(meter_count) AS avgValue " +
+                        "FROM readings " +
+                        "WHERE date_of_reading >= CURDATE() - INTERVAL 1 YEAR " +
+                        "GROUP BY kind_of_meter, periodLabel " +
+                        "ORDER BY periodLabel";
+            } else {
+                sql = "SELECT kind_of_meter, YEAR(date_of_reading) AS periodLabel, AVG(meter_count) AS avgValue " +
+                        "FROM readings " +
+                        "WHERE date_of_reading >= CURDATE() - INTERVAL ? YEAR " +
+                        "GROUP BY kind_of_meter, periodLabel " +
+                        "ORDER BY periodLabel";
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                if (periodYears != 1) {
+                    stmt.setInt(1, periodYears);
+                }
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    String meterType = rs.getString("kind_of_meter");
+                    String periodLabel = rs.getString("periodLabel");
+                    double avgValue = rs.getDouble("avgValue");
+                    analysisList.add(new AnalysisData(meterType, periodLabel, avgValue));
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException("Error retrieving analysis data", e);
+            }
+            return analysisList;
+        }
+
 
     // Ermöglicht das Anlegen eines Readings auch ohne zugeordneten Customer.
     public UUID createReading(Reading reading) {
