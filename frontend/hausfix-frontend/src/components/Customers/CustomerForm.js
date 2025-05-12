@@ -13,7 +13,7 @@ function CustomerForm() {
   const [customer, setCustomer] = useState({
     firstName: '',
     lastName: '',
-    birthDate: '', // Verwende nur 'birthDate'
+    birthDate: '',
     gender: '',
   });
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ function CustomerForm() {
       setCustomer({
         firstName: response.data.firstName,
         lastName: response.data.lastName,
-        birthDate: response.data.birthdate, // Backend liefert 'birthdate', mapped durch @JsonProperty
+        birthDate: response.data.birthdate,
         gender: response.data.gender,
       });
     } catch (error) {
@@ -100,7 +100,7 @@ function CustomerForm() {
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Geburtsdatum"
-                name="birthDate" // Verwende 'birthDate' statt 'birthdate'
+                name="birthDate"
                 type="date"
                 value={customer.birthDate}
                 onChange={handleChange}

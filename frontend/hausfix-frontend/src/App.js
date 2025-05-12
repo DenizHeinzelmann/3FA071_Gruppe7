@@ -1,3 +1,4 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline, Box, Container, Typography } from '@mui/material';
@@ -11,6 +12,7 @@ import ReadingDetail from './components/Readings/ReadingDetail';
 import ImportExport from './components/ImportExport/ImportExport';
 import Login from './components/Auth/Login';
 import PrivateRoute from './components/Auth/PrivateRoute';
+import Analysis from './components/Analysis';
 
 function App() {
   return (
@@ -23,7 +25,6 @@ function App() {
             <Route path="/" element={<Navigate to="/customers" replace />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Geschützte Routen */}
             <Route path="/customers" element={
               <PrivateRoute>
                 <CustomerList />
@@ -72,7 +73,12 @@ function App() {
               </PrivateRoute>
             } />
 
-            {/* Fallback-Route */}
+            <Route path="/analysis" element={
+              <PrivateRoute>
+                <Analysis />
+              </PrivateRoute>
+            } />
+
             <Route path="*" element={<Typography variant="h4">404 - Seite nicht gefunden</Typography>} />
           </Routes>
         </Container>

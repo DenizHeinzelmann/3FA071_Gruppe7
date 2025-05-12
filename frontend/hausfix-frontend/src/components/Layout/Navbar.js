@@ -1,3 +1,4 @@
+// Navbar.js
 import React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -17,6 +18,7 @@ function Navbar() {
           <Button color="inherit" component={Link} to="/customers">Kunden</Button>
           <Button color="inherit" component={Link} to="/readings">Ablesungen</Button>
           <Button color="inherit" component={Link} to="/import-export">Import/Export</Button>
+          <Button color="inherit" component={Link} to="/analysis">Analyse</Button>
         </Toolbar>
       </AppBar>
     </Box>
