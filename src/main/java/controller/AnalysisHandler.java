@@ -20,7 +20,6 @@ public class AnalysisHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
-            // Erwarte einen Query-Parameter "period", z.B. ?period=1
             URI requestURI = exchange.getRequestURI();
             String query = requestURI.getQuery();
             int periodYears = 1; // Default
