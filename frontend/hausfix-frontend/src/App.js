@@ -1,8 +1,9 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline, Box, Container, Typography } from '@mui/material';
 import Navbar from './components/Layout/Navbar';
+import Home from './components/Home'; // Falls noch nicht da: einfache Willkommensseite
 import CustomerList from './components/Customers/CustomerList';
 import CustomerForm from './components/Customers/CustomerForm';
 import CustomerDetail from './components/Customers/CustomerDetail';
@@ -13,18 +14,27 @@ import ImportExport from './components/ImportExport/ImportExport';
 import Login from './components/Auth/Login';
 import PrivateRoute from './components/Auth/PrivateRoute';
 import Analysis from './components/Analysis';
+import { Divider } from '@mui/material';
 
 function App() {
   return (
     <Router>
       <CssBaseline />
       <Navbar />
+        <Divider />
       <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
         <Container maxWidth="lg">
           <Routes>
-            <Route path="/" element={<Navigate to="/customers" replace />} />
             <Route path="/login" element={<Login />} />
 
+            {/* 🟢 Geschützte Home-Seite */}
+            <Route path="/" element={
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute>
+            } />
+
+            {/* 🟢 Alle anderen geschützten Routen */}
             <Route path="/customers" element={
               <PrivateRoute>
                 <CustomerList />
