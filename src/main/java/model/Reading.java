@@ -18,6 +18,7 @@ public class Reading implements IReading {
     private Double meterCount;
     private String meterId;
     private Boolean substitute;
+    
     private UUID uid;
 
     public Reading(UUID uid, Boolean substitute, String meterId, Double meterCount, KindOfMeter kindOfMeter, LocalDate dateOfReading, Customer customer, String comment) {

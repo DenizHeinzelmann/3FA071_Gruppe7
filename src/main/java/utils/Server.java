@@ -1,12 +1,15 @@
-// src/main/java/utils/Server.java
-
 package utils;
 
+import controller.AnalysisHandler;
 import controller.CustomerHandler;
+import controller.LoginHandler;
 import controller.ReadingHandler;
+import controller.RegisterHandler;
+import filter.CorsFilter;
 import repository.CustomerRepository;
 import repository.DatabaseConnection;
 import repository.ReadingRepository;
+import repository.UserRepository;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.FileNotFoundException;
@@ -19,14 +22,7 @@ import java.util.Properties;
 public class Server {
     private static HttpServer server;
 
-    /**
-     * Startet den REST-Server.
-     *
-     * @param url Die URL inklusive Port, z.B. "http://localhost:8000"
-     * @throws IOException Wenn der Server nicht gestartet werden kann
-     */
     public static void startServer(String url) throws IOException {
-        // Extrahiere Host und Port aus der URL
         String[] parts = url.split(":");
         if (parts.length != 3) {
             throw new IllegalArgumentException("URL muss im Format http://host:port sein");
@@ -39,7 +35,6 @@ public class Server {
             throw new IllegalArgumentException("Port muss eine gültige Zahl sein.", e);
         }
 
-        // Lade die 'database.properties' Datei
         Properties properties = new Properties();
         try (InputStream inStream = Server.class.getClassLoader().getResourceAsStream("database.properties")) {
             if (inStream == null) {
@@ -51,35 +46,50 @@ public class Server {
             throw new IOException("Datenbank-Konfiguration fehlgeschlagen.", e);
         }
 
-        // Starte den HTTP-Server
         server = HttpServer.create(new InetSocketAddress(host, port), 0);
 
         try {
-            // Öffne die Datenbankverbindung
             DatabaseConnection.getInstance().openConnection(properties);
-
-            // Initialisiere Repositories
             CustomerRepository customerRepository = new CustomerRepository();
             ReadingRepository readingRepository = new ReadingRepository();
+            UserRepository userRepository = new UserRepository();
 
-            // Erstelle Kontexte für REST-Endpunkte
-            server.createContext("/api/customers", new CustomerHandler(customerRepository));
-            server.createContext("/api/readings", new ReadingHandler(readingRepository, customerRepository));
+            // Endpoint für grafische Auswertung (Analysis) VOR dem allgemeinen Readings-Handler
+            server.createContext(
+                    "/api/readings/analysis",
+                    new CorsFilter(new AnalysisHandler(readingRepository))
+            );
+
+            // Bestehende Endpunkte
+            server.createContext(
+                    "/api/customers",
+                    new CorsFilter(new CustomerHandler(customerRepository))
+            );
+            server.createContext(
+                    "/api/readings",
+                    new CorsFilter(new ReadingHandler(readingRepository, customerRepository))
+            );
+
+            // Endpoints für Userverwaltung
+            server.createContext(
+                    "/api/users/login",
+                    new CorsFilter(new LoginHandler(userRepository))
+            );
+            server.createContext(
+                    "/api/users/register",
+                    new CorsFilter(new RegisterHandler(userRepository))
+            );
 
             server.setExecutor(null); // Default-Executor
             server.start();
             System.out.println("Server gestartet auf " + url);
         } catch (SQLException e) {
             System.err.println("Fehler beim Initialisieren der Repositories: " + e.getMessage());
-            // Stoppe den Server, wenn die Repositories nicht initialisiert werden können
             server.stop(0);
             throw new IOException("Server konnte nicht gestartet werden aufgrund eines Datenbankfehlers.", e);
         }
     }
 
-    /**
-     * Stoppt den REST-Server.
-     */
     public static void stopServer() {
         if (server != null) {
             server.stop(0);

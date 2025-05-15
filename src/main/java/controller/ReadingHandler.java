@@ -75,7 +75,8 @@ public class ReadingHandler implements HttpHandler {
         } catch (IllegalArgumentException e) {
             sendResponse(exchange, 400, "Invalid UUID format");
         } catch (Exception e) {
-            sendResponse(exchange, 500, "Error retrieving reading");
+            e.printStackTrace(); // Stacktrace ausgeben
+            sendResponse(exchange, 500, "Error retrieving reading (HandlerClass)");
         }
     }
 
@@ -85,6 +86,7 @@ public class ReadingHandler implements HttpHandler {
             String response = JsonUtil.toJson(readings);
             sendResponse(exchange, 200, response);
         } catch (Exception e) {
+            e.printStackTrace(); // Stacktrace ausgeben
             sendResponse(exchange, 500, "Error retrieving readings");
         }
     }
@@ -109,19 +111,22 @@ public class ReadingHandler implements HttpHandler {
                 .reduce("", (acc, line) -> acc + line);
         try {
             Reading reading = JsonUtil.fromJson(body, Reading.class);
-            // Sicherstellen, dass der Kunde existiert, andernfalls erstellen
+
+            // Optional: Wenn ein Kunde bereitgestellt wird, prüfen oder erstellen
             if (reading.getCustomer() != null) {
-                UUID customerId = reading.getCustomer().getid(); // Verwendung von getid()
+                UUID customerId = reading.getCustomer().getid(); // Korrigierte Methode
                 if (customerId == null || customerRepository.getCustomer(customerId) == null) {
-                    customerRepository.createCustomer(reading.getCustomer());
+                    // Wenn der Customer nicht existiert, erstellen
+                    UUID newCustomerId = customerRepository.createCustomer(reading.getCustomer());
+                    reading.getCustomer().setid(newCustomerId); // Setzen der neuen ID
+                } else {
+                    // Optional: Aktualisieren der Referenz des Customers, falls nötig
+                    reading.setCustomer(customerRepository.getCustomer(customerId));
                 }
-            } else {
-                sendResponse(exchange, 400, "Reading must have a customer");
-                return;
             }
 
             UUID id = readingRepository.createReading(reading);
-            reading.setid(id); // Verwendung von setid()
+            reading.setid(id); // Korrigierte Methode
             String response = JsonUtil.toJson(reading);
             sendResponse(exchange, 201, response);
         } catch (Exception e) {
@@ -129,6 +134,7 @@ public class ReadingHandler implements HttpHandler {
             sendResponse(exchange, 400, "Invalid JSON format or data: " + e.getMessage());
         }
     }
+
 
     private void handleUpdateReading(HttpExchange exchange, String idStr) throws IOException {
         try {
