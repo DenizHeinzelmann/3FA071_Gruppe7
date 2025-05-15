@@ -1,4 +1,3 @@
-// src/components/ImportExport/ImportExport.js
 import React, { useState } from 'react';
 import {
   Button, Paper, Grid, Select, MenuItem, InputLabel, FormControl
@@ -97,19 +96,17 @@ function ImportExport() {
           const parsed = Papa.parse(raw, { header: true, skipEmptyLines: true });
           data = parsed.data;
 
-          // Spezialfall: nicht-standardisierte Reading CSV
           if (dataType === 'readings' && data[0]?.Kunde && data[1]?.Zählernummer) {
             const customerId = data[0]['Kunde'].replace(/"/g, '').trim();
             const meterId = data[1]['Zählernummer'].replace(/"/g, '').trim();
 
-            // Finde Zeile mit "Datum" und ab da verarbeiten
             const datumIndex = parsed.data.findIndex(row => row['Datum']);
             const dataRows = parsed.data.slice(datumIndex);
 
             data = dataRows.map(row => ({
               meterId,
               meterCount: parseFloat(row['Zählerstand in m³']?.replace(',', '.') || ''),
-              kindOfMeter: 'WASSER', // kann später dynamisch gemacht werden
+              kindOfMeter: 'WASSER',
               dateOfReading: convertDate(row['Datum']),
               customer: { id: customerId },
               comment: row['Kommentar'] || ''

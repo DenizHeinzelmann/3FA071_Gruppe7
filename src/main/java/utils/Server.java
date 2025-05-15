@@ -54,13 +54,11 @@ public class Server {
             ReadingRepository readingRepository = new ReadingRepository();
             UserRepository userRepository = new UserRepository();
 
-            // Endpoint für grafische Auswertung (Analysis) VOR dem allgemeinen Readings-Handler
             server.createContext(
                     "/api/readings/analysis",
                     new CorsFilter(new AnalysisHandler(readingRepository))
             );
 
-            // Bestehende Endpunkte
             server.createContext(
                     "/api/customers",
                     new CorsFilter(new CustomerHandler(customerRepository))
@@ -70,7 +68,6 @@ public class Server {
                     new CorsFilter(new ReadingHandler(readingRepository, customerRepository))
             );
 
-            // Endpoints für Userverwaltung
             server.createContext(
                     "/api/users/login",
                     new CorsFilter(new LoginHandler(userRepository))

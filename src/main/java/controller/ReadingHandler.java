@@ -112,21 +112,18 @@ public class ReadingHandler implements HttpHandler {
         try {
             Reading reading = JsonUtil.fromJson(body, Reading.class);
 
-            // Optional: Wenn ein Kunde bereitgestellt wird, prüfen oder erstellen
             if (reading.getCustomer() != null) {
                 UUID customerId = reading.getCustomer().getid(); // Korrigierte Methode
                 if (customerId == null || customerRepository.getCustomer(customerId) == null) {
-                    // Wenn der Customer nicht existiert, erstellen
                     UUID newCustomerId = customerRepository.createCustomer(reading.getCustomer());
                     reading.getCustomer().setid(newCustomerId); // Setzen der neuen ID
                 } else {
-                    // Optional: Aktualisieren der Referenz des Customers, falls nötig
                     reading.setCustomer(customerRepository.getCustomer(customerId));
                 }
             }
 
             UUID id = readingRepository.createReading(reading);
-            reading.setid(id); // Korrigierte Methode
+            reading.setid(id);
             String response = JsonUtil.toJson(reading);
             sendResponse(exchange, 201, response);
         } catch (Exception e) {

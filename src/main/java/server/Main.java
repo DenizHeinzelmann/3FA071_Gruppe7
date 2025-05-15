@@ -1,4 +1,4 @@
-package server;// src/main/java/com/deinegruppe/digitalehausverwaltung/server/Main.java
+package server;
 
 import utils.Server;
 

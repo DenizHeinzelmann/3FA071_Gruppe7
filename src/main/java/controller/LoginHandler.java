@@ -28,11 +28,9 @@ public class LoginHandler implements HttpHandler {
                     .lines()
                     .reduce("", (acc, line) -> acc + line);
             try {
-                // Erwartet JSON: { "username": "demo", "password": "demo" }
                 LoginRequest loginRequest = JsonUtil.fromJson(body, LoginRequest.class);
                 User user = userRepository.getUserByUsername(loginRequest.getUsername());
 
-                // Dummy-Prüfung: In einer echten Anwendung sollten Sie das Passwort gehasht vergleichen!
                 if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
                     String token = JwtUtil.generateToken(user.getId().toString());
                     LoginResponse responseObj = new LoginResponse(token);

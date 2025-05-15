@@ -1,4 +1,3 @@
-// src/components/Customers/CustomerList.js
 import React, { useEffect, useState } from 'react';
 import { getAllCustomers, deleteCustomer } from '../../services/customerService';
 import { Link } from 'react-router-dom';

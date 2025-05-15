@@ -14,7 +14,6 @@ public class User {
     private String role;
 
     public User() {
-        // Standardkonstruktor
     }
 
     public User(String username, String password, String role) {
@@ -42,7 +41,6 @@ public class User {
         this.username = username;
     }
 
-    // Das Passwort wird nur intern verwendet
     public String getPassword() {
         return password;
     }

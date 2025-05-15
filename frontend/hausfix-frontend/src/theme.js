@@ -2,13 +2,13 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    primary:   { main: '#4F46E5' },   // Indigo 600
-    secondary: { main: '#EC4899' },   // Pink 500
-    background:{ default: '#F3F4F6' }, // Grau-50
-    text:      { primary: '#111827' }, // Grau-900
+    primary:   { main: '#4F46E5' },
+    secondary: { main: '#EC4899' },
+    background:{ default: '#F3F4F6' },
+    text:      { primary: '#111827' },
   },
   shape: {
-    borderRadius: 12,  // Globale Eck-Abrundung
+    borderRadius: 12,
   },
   typography: {
     button: {

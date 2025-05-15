@@ -1,9 +1,8 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline, Box, Container, Typography } from '@mui/material';
 import Navbar from './components/Layout/Navbar';
-import Home from './components/Home'; // Falls noch nicht da: einfache Willkommensseite
+import Home from './components/Home';
 import CustomerList from './components/Customers/CustomerList';
 import CustomerForm from './components/Customers/CustomerForm';
 import CustomerDetail from './components/Customers/CustomerDetail';
