@@ -1,12 +1,18 @@
+// src/components/Customers/CustomerList.js
 import React, { useEffect, useState } from 'react';
 import { getAllCustomers, deleteCustomer } from '../../services/customerService';
 import { Link } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, IconButton, Typography } from '@mui/material';
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Button, IconButton, Typography, TextField, Box
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [filter, setFilter] = useState('');
 
   useEffect(() => {
     fetchCustomers();
@@ -16,6 +22,7 @@ function CustomerList() {
     try {
       const response = await getAllCustomers();
       setCustomers(response.data);
+      setFiltered(response.data);
     } catch (error) {
       console.error('Fehler beim Abrufen der Kunden:', error);
     }
@@ -32,14 +39,34 @@ function CustomerList() {
     }
   };
 
+  const handleFilter = (e) => {
+    const val = e.target.value.toLowerCase();
+    setFilter(val);
+    setFiltered(
+      customers.filter(c =>
+        c.id.toLowerCase().includes(val) ||
+        c.firstName.toLowerCase().includes(val) ||
+        c.lastName.toLowerCase().includes(val)
+      )
+    );
+  };
+
   return (
     <div>
       <Typography variant="h4" gutterBottom>Kunden</Typography>
-      <Button variant="contained" color="primary" component={Link} to="/customers/new" style={{ marginBottom: '20px' }}>
-        Neuer Kunde
-      </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+        <Button variant="contained" color="primary" component={Link} to="/customers/new">
+          Neuer Kunde
+        </Button>
+        <TextField
+          label="Filtern nach ID, Vorname, Nachname"
+          variant="outlined"
+          value={filter}
+          onChange={handleFilter}
+        />
+      </Box>
       <TableContainer component={Paper}>
-        <Table aria-label="Kunden Tabelle">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
@@ -51,7 +78,7 @@ function CustomerList() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {customers.map((customer) => (
+            {filtered.map(customer => (
               <TableRow key={customer.id}>
                 <TableCell>{customer.id}</TableCell>
                 <TableCell>{customer.firstName}</TableCell>
@@ -68,7 +95,7 @@ function CustomerList() {
                 </TableCell>
               </TableRow>
             ))}
-            {customers.length === 0 && (
+            {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} align="center">Keine Kunden gefunden.</TableCell>
               </TableRow>
