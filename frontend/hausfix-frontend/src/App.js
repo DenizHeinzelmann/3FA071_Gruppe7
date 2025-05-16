@@ -1,6 +1,7 @@
-import React from 'react';
+// src/App.js
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { CssBaseline, Box, Container, Typography } from '@mui/material';
+import { CssBaseline, Box, Container, Typography, ThemeProvider, createTheme } from '@mui/material';
 import Navbar from './components/Layout/Navbar';
 import Home from './components/Home';
 import CustomerList from './components/Customers/CustomerList';
@@ -16,83 +17,55 @@ import Analysis from './components/Analysis';
 import { Divider } from '@mui/material';
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored) setDarkMode(stored === 'true');
+  }, []);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      localStorage.setItem('darkMode', !prev);
+      return !prev;
+    });
+  };
+
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? 'dark' : 'light',
+      primary: { main: '#4F46E5' },
+      secondary: { main: '#EC4899' },
+    },
+  });
+
   return (
-    <Router>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Navbar />
+      <Router>
+        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
         <Divider />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
-        <Container maxWidth="lg">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-
-            {/* 🟢 Geschützte Home-Seite */}
-            <Route path="/" element={
-              <PrivateRoute>
-                <Home />
-              </PrivateRoute>
-            } />
-
-            {/* 🟢 Alle anderen geschützten Routen */}
-            <Route path="/customers" element={
-              <PrivateRoute>
-                <CustomerList />
-              </PrivateRoute>
-            } />
-            <Route path="/customers/new" element={
-              <PrivateRoute>
-                <CustomerForm />
-              </PrivateRoute>
-            } />
-            <Route path="/customers/:id/edit" element={
-              <PrivateRoute>
-                <CustomerForm />
-              </PrivateRoute>
-            } />
-            <Route path="/customers/:id" element={
-              <PrivateRoute>
-                <CustomerDetail />
-              </PrivateRoute>
-            } />
-
-            <Route path="/readings" element={
-              <PrivateRoute>
-                <ReadingList />
-              </PrivateRoute>
-            } />
-            <Route path="/readings/new" element={
-              <PrivateRoute>
-                <ReadingForm />
-              </PrivateRoute>
-            } />
-            <Route path="/readings/:id/edit" element={
-              <PrivateRoute>
-                <ReadingForm />
-              </PrivateRoute>
-            } />
-            <Route path="/readings/:id" element={
-              <PrivateRoute>
-                <ReadingDetail />
-              </PrivateRoute>
-            } />
-
-            <Route path="/import-export" element={
-              <PrivateRoute>
-                <ImportExport />
-              </PrivateRoute>
-            } />
-
-            <Route path="/analysis" element={
-              <PrivateRoute>
-                <Analysis />
-              </PrivateRoute>
-            } />
-
-            <Route path="*" element={<Typography variant="h4">404 - Seite nicht gefunden</Typography>} />
-          </Routes>
-        </Container>
-      </Box>
-    </Router>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+          <Container maxWidth="lg">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+              <Route path="/customers" element={<PrivateRoute><CustomerList /></PrivateRoute>} />
+              <Route path="/customers/new" element={<PrivateRoute><CustomerForm /></PrivateRoute>} />
+              <Route path="/customers/:id/edit" element={<PrivateRoute><CustomerForm /></PrivateRoute>} />
+              <Route path="/customers/:id" element={<PrivateRoute><CustomerDetail /></PrivateRoute>} />
+              <Route path="/readings" element={<PrivateRoute><ReadingList /></PrivateRoute>} />
+              <Route path="/readings/new" element={<PrivateRoute><ReadingForm /></PrivateRoute>} />
+              <Route path="/readings/:id/edit" element={<PrivateRoute><ReadingForm /></PrivateRoute>} />
+              <Route path="/readings/:id" element={<PrivateRoute><ReadingDetail /></PrivateRoute>} />
+              <Route path="/import-export" element={<PrivateRoute><ImportExport /></PrivateRoute>} />
+              <Route path="/analysis" element={<PrivateRoute><Analysis /></PrivateRoute>} />
+              <Route path="*" element={<Typography variant="h4">404 - Seite nicht gefunden</Typography>} />
+            </Routes>
+          </Container>
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
 }
 
