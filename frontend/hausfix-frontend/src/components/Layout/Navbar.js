@@ -43,7 +43,7 @@ function Navbar({ darkMode, toggleDarkMode }) {
             </Button>
           ))}
           <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ mr: 1 }}>Dark Mode</Typography>
+            <Typography variant="body2" sx={{ mr: 1 }}></Typography>
             <Switch checked={darkMode} onChange={toggleDarkMode} />
           </Box>
         </Toolbar>
