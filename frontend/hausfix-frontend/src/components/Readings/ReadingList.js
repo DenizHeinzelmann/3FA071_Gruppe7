@@ -13,13 +13,16 @@ import {
   Button,
   IconButton,
   Typography,
-  Container
+  Container,
+  TextField
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
 function ReadingList() {
   const [readings, setReadings] = useState([]);
+  const [filteredReadings, setFilteredReadings] = useState([]);
+  const [filter, setFilter] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,11 +31,10 @@ function ReadingList() {
   }, []);
 
   const fetchReadings = async () => {
-    console.log('Fetching all readings...');
     try {
       const response = await getAllReadings();
-      console.log('Readings fetched successfully:', response.data);
       setReadings(response.data);
+      setFilteredReadings(response.data);
       setLoading(false);
     } catch (err) {
       console.error('Fehler beim Abrufen der Ablesungen:', err);
@@ -42,11 +44,9 @@ function ReadingList() {
   };
 
   const handleDelete = async (id) => {
-    console.log(`Attempting to delete reading with ID: ${id}`);
     if (window.confirm('Sind Sie sicher, dass Sie diese Ablesung löschen möchten?')) {
       try {
         await deleteReading(id);
-        console.log(`Reading with ID: ${id} deleted successfully.`);
         fetchReadings();
       } catch (err) {
         console.error('Fehler beim Löschen der Ablesung:', err);
@@ -55,8 +55,24 @@ function ReadingList() {
     }
   };
 
+  const handleFilter = (e) => {
+    const val = e.target.value.toLowerCase();
+    setFilter(val);
+    setFilteredReadings(
+      readings.filter(r =>
+        r.id.toLowerCase().includes(val) ||
+        r.meterId.toLowerCase().includes(val) ||
+        r.kindOfMeter.toLowerCase().includes(val) ||
+        (r.customer && (
+          r.customer.firstName.toLowerCase().includes(val) ||
+          r.customer.lastName.toLowerCase().includes(val)
+        ))
+      )
+    );
+  };
+
   if (loading) {
-    return <Typography>Loading...</Typography>;
+    return <Typography>Lade Daten...</Typography>;
   }
 
   return (
@@ -73,6 +89,14 @@ function ReadingList() {
       >
         Neue Ablesung
       </Button>
+      <TextField
+        label="Filtern nach ID, Zähler-ID, Kunde, Typ"
+        variant="outlined"
+        fullWidth
+        sx={{ marginBottom: 2 }}
+        value={filter}
+        onChange={handleFilter}
+      />
       {error && (
         <Typography color="error" sx={{ marginBottom: 2 }}>
           {error}
@@ -93,7 +117,7 @@ function ReadingList() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {readings.map((reading) => (
+            {filteredReadings.map((reading) => (
               <TableRow key={reading.id}>
                 <TableCell>{reading.id}</TableCell>
                 <TableCell>{reading.meterId}</TableCell>
@@ -116,7 +140,7 @@ function ReadingList() {
                 </TableCell>
               </TableRow>
             ))}
-            {readings.length === 0 && (
+            {filteredReadings.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   Keine Ablesungen gefunden.

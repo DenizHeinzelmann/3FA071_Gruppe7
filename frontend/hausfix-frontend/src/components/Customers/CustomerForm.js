@@ -145,14 +145,12 @@ function CustomerForm() {
         </form>
       </Paper>
 
-      {/* Snackbar für Fehler */}
       <Snackbar open={Boolean(error)} autoHideDuration={6000} onClose={() => setError(null)}>
         <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
           {error}
         </Alert>
       </Snackbar>
 
-      {/* Snackbar für Erfolg */}
       <Snackbar open={success} autoHideDuration={6000} onClose={() => setSuccess(false)}>
         <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
           Kunde erfolgreich {isEditMode ? 'aktualisiert' : 'erstellt'}!

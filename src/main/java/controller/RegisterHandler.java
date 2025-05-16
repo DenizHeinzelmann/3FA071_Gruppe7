@@ -27,9 +27,7 @@ public class RegisterHandler implements HttpHandler {
                     .lines()
                     .reduce("", (acc, line) -> acc + line);
             try {
-                // Erwartet JSON: { "username": "demo", "password": "demo", "role": "ADMIN" }
                 User user = JsonUtil.fromJson(body, User.class);
-                // In einer echten Anwendung: Passwort vorher hashen!
                 userRepository.createUser(user);
                 String responseJson = JsonUtil.toJson(user);
                 sendResponse(exchange, 201, responseJson);

@@ -12,10 +12,10 @@ import model.Reading;
 
 public class JsonUtil {
     private static final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule()) // Unterstützt Java 8+ Date/Time API
+            .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .addMixIn(Customer.class, CustomerMixin.class) // Register CustomerMixin
-            .addMixIn(Reading.class, ReadingMixin.class); // Register ReadingMixin
+            .addMixIn(Customer.class, CustomerMixin.class)
+            .addMixIn(Reading.class, ReadingMixin.class);
 
     public static String toJson(Object obj) throws Exception {
         return mapper.writeValueAsString(obj);

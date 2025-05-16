@@ -13,7 +13,6 @@ public class UserRepository {
     }
 
     public UUID createUser(User user) {
-        // In einer echten Anwendung sollten Sie das Passwort vor dem Speichern hashen!
         UUID id = user.getId() != null ? user.getId() : UUID.randomUUID();
         user.setId(id);
 

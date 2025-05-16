@@ -67,7 +67,6 @@ public class CSVReader {
                     Customer customer = new Customer(id, firstName, lastName, birthDate, gender);
                     customerRepository.createCustomer(customer);
                     customers.add(customer);
-                    System.out.println("Customer saved: " + customer.getid());
                 } catch (IllegalArgumentException | DateTimeParseException e) {
                     throw new IOException("Error processing line: " + line + " - " + e.getMessage(), e);
                 }
