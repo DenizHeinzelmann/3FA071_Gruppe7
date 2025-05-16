@@ -8,7 +8,6 @@ const kindsOfMeter = [
   { value: 'HEIZUNG', label: 'Heizung' },
   { value: 'WASSER', label: 'Wasser' },
   { value: 'STROM', label: 'Strom' },
-  // Weitere Arten hinzufügen, falls benötigt
 ];
 
 function ReadingForm() {

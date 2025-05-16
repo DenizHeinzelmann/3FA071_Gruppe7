@@ -18,7 +18,7 @@ const Login = () => {
     try {
       await login(credentials.username, credentials.password);
       setSuccess(true);
-      navigate('/');s
+      navigate('/');
     } catch (error) {
       console.error('Login error:', error);
       setError('Login fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.');
