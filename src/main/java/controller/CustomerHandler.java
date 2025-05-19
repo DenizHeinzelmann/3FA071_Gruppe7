@@ -91,20 +91,29 @@ public class CustomerHandler implements HttpHandler {
     }
 
     private void handleCreateCustomer(HttpExchange exchange) throws IOException {
-        InputStream is = exchange.getRequestBody();
-        String body = new BufferedReader(new InputStreamReader(is))
-                .lines()
-                .reduce("", (acc, line) -> acc + line);
+        String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
+                .lines().reduce("", (acc, line) -> acc + line);
         try {
             Customer customer = JsonUtil.fromJson(body, Customer.class);
+
+            // VALIDIERUNG
+            if (customer.getFirstName() == null || customer.getFirstName().trim().isEmpty()
+                    || customer.getLastName() == null || customer.getLastName().trim().isEmpty()
+                    || customer.getBirthDate() == null
+                    || customer.getGender() == null) {
+                sendResponse(exchange, 400, "Alle Felder (Vorname, Nachname, Geburtsdatum, Geschlecht) sind Pflichtfelder.");
+                return;
+            }
+
             UUID id = customerRepository.createCustomer(customer);
-            customer.setid(id); // Stelle sicher, dass die Methode korrekt ist
+            customer.setid(id);
             String response = JsonUtil.toJson(customer);
             sendResponse(exchange, 201, response);
         } catch (Exception e) {
             e.printStackTrace();
             sendResponse(exchange, 400, "Invalid JSON format or data: " + e.getMessage());
         }
+
     }
 
     private void handleUpdateCustomer(HttpExchange exchange, String idStr) throws IOException {

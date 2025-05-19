@@ -1,26 +1,23 @@
+// src/components/Layout/Navbar.js
 import React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import { AppBar, Toolbar, Typography, Button, Box, Switch } from '@mui/material';
 import { Link } from 'react-router-dom';
 
-function Navbar() {
+function Navbar({ darkMode, toggleDarkMode }) {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="fixed"
         elevation={3}
         sx={{
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: darkMode ? 'rgba(18,18,18,0.95)' : 'rgba(255, 255, 255, 0.9)',
           backdropFilter: 'blur(10px)',
-          color: '#1a1a1a',
+          color: darkMode ? '#f1f1f1' : '#1a1a1a',
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
         }}
       >
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
             Digitale Hausverwaltung
           </Typography>
           {[
@@ -45,6 +42,10 @@ function Navbar() {
               {label}
             </Button>
           ))}
+          <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ mr: 1 }}></Typography>
+            <Switch checked={darkMode} onChange={toggleDarkMode} />
+          </Box>
         </Toolbar>
       </AppBar>
     </Box>

@@ -105,18 +105,26 @@ public class ReadingHandler implements HttpHandler {
     }
 
     private void handleCreateReading(HttpExchange exchange) throws IOException {
-        InputStream is = exchange.getRequestBody();
-        String body = new BufferedReader(new InputStreamReader(is))
-                .lines()
-                .reduce("", (acc, line) -> acc + line);
+        String body = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
+                .lines().reduce("", (acc, line) -> acc + line);
         try {
             Reading reading = JsonUtil.fromJson(body, Reading.class);
 
+            // VALIDIERUNG
+            if (reading.getMeterId() == null || reading.getMeterId().trim().isEmpty()
+                    || reading.getKindOfMeter() == null
+                    || reading.getDateOfReading() == null
+                    || reading.getMeterCount() <= 0) {
+                sendResponse(exchange, 400, "Pflichtfelder fehlen: meterId, meterCount (>0), kindOfMeter, dateOfReading.");
+                return;
+            }
+
+            // Optional: Prüfe auf gültigen Kunden, falls vorhanden
             if (reading.getCustomer() != null) {
-                UUID customerId = reading.getCustomer().getid(); // Korrigierte Methode
+                UUID customerId = reading.getCustomer().getid();
                 if (customerId == null || customerRepository.getCustomer(customerId) == null) {
                     UUID newCustomerId = customerRepository.createCustomer(reading.getCustomer());
-                    reading.getCustomer().setid(newCustomerId); // Setzen der neuen ID
+                    reading.getCustomer().setid(newCustomerId);
                 } else {
                     reading.setCustomer(customerRepository.getCustomer(customerId));
                 }
@@ -131,6 +139,7 @@ public class ReadingHandler implements HttpHandler {
             sendResponse(exchange, 400, "Invalid JSON format or data: " + e.getMessage());
         }
     }
+
 
 
     private void handleUpdateReading(HttpExchange exchange, String idStr) throws IOException {

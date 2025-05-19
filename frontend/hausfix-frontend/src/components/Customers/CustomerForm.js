@@ -5,7 +5,7 @@ import { TextField, Button, MenuItem, Paper, Grid, Container, Typography, Snackb
 
 const genders = [
   { value: 'M', label: 'Männlich' },
-  { value: 'F', label: 'Weiblich' },
+  { value: 'W', label: 'Weiblich' },
   { value: 'D', label: 'Divers' },
 ];
 
